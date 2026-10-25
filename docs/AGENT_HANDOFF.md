@@ -19,7 +19,7 @@
 - iPhone 17 / iOS 26.4: simulator integration PASS for onboarding, Skip persistence, Home and Discover.
 - Android API 36: normal debug APK built, installed and run; screenshot confirms onboarding in Flutter. The first integration-test attempt hit a stale ADB logcat reader; after clearing it, the Android integration smoke test passed onboarding, Skip persistence, Home and Discover navigation.
 - macOS 27.2: debug app built and opened; running app shows Home and the public-preview notice.
-- Windows Actions PASS for prior commit; latest known run `40233835335`. Trigger/record a new run after pushing Phase 3.
+- Windows Actions PASS for Phase 3 implementation commit `b5780a8`; [run 40237973967](https://github.com/coimbatorestartupcommunity-hub/csc-circle-app/actions/runs/40237973967) passed analysis, widget tests, Windows desktop build, and artifact upload.
 
 ## Phase 2 limitations
 
@@ -31,6 +31,5 @@
 
 ## Current next actions
 
-1. Push the reviewed Phase 3 implementation and record the resulting Windows workflow run.
-2. Continue Phase 3 only after the owner supplies approved redirect/provider settings and a safe non-production account; then test auth/session and member reads while honoring audited RLS/RPC policies.
-3. Preserve Phase 2 performance and platform limitations in `docs/phases/PHASE_2_COMPLETE.md`; avoid claiming native Liquid Glass or unverified iOS VoiceOver behavior.
+1. Continue Phase 3 only after the owner supplies approved redirect/provider settings and a safe non-production account; then test auth/session and member reads while honoring audited RLS/RPC policies.
+2. Preserve Phase 2 performance and platform limitations in `docs/phases/PHASE_2_COMPLETE.md`; avoid claiming native Liquid Glass or unverified iOS VoiceOver behavior.

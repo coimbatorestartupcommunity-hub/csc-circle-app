@@ -16,6 +16,7 @@
 - `lib/main.dart` initializes only from the existing project URL and publishable key. Auth uses PKCE and `SecureSessionStorage` backed by `flutter_secure_storage`; no service-role key is accepted.
 - `CSC_AUTH_REDIRECT_APPROVED` defaults to false. Signup and recovery require the exact `cscircle://auth-callback` redirect to be configured as approved; sign-in remains available when backend credentials exist.
 - The Supabase Flutter SDK owns incoming PKCE callback processing. The app registers the `cscircle://auth-callback` scheme on iOS, macOS, and Android; no duplicate deep-link stream listener was added.
+- Callback routing was smoke-checked without auth credentials: iOS Simulator opened the app for `cscircle://auth-callback`, and Android Package Manager resolves that URI to `MainActivity`. This only verifies OS routing; no authorization code was exchanged.
 - Typed sign-in, signup, recovery, password update, session-expiry, and logout UI/repository flows are implemented. Signup/recovery display a clear hold state until redirect approval.
 - Typed public clients now read events, updates, resources, and opportunities with explicit columns, published predicates, stable order, 1–50 row page bounds, 15-second timeouts, and mapped safe errors. Opportunities apply the Asia/Kolkata date rule.
 - Events and updates tabs, plus Home resource/opportunity actions, use the live clients when the existing Supabase URL and publishable key are configured. Without them the app shows labeled preview states and no fabricated content.
@@ -29,17 +30,16 @@
 - iPhone 17 / iOS 26.4: PASS — `flutter test integration_test/app_smoke_test.dart -d 43708308-5A8E-47D4-9313-698791EF168A` ran one integration test covering first-run onboarding, Skip persistence, Home, and Discover navigation. Xcode simulator build/install passed.
 - Android 16 / API 36: PASS — `flutter build apk --debug` succeeded; installed and launched the normal debug app with `flutter run -d emulator-5554 --debug`. Screenshot inspection confirmed Flutter onboarding and the `Public preview` state. After clearing an old stale ADB logcat process, `flutter test integration_test/app_smoke_test.dart -d emulator-5554` passed one test covering onboarding, Skip persistence, Home and Discover navigation.
 - macOS 27.2: PASS — `flutter build macos --debug` succeeded; opened `build/macos/Build/Products/Debug/CSC Circle.app` and confirmed the running app shows the Home page and labeled public-preview state.
-- Windows CI: latest known passing run is `40233835335`; a new workflow run for this implementation is pending after push.
+- Windows CI: PASS — [run 40237973967](https://github.com/coimbatorestartupcommunity-hub/csc-circle-app/actions/runs/40237973967) for implementation commit `b5780a8`; Dart analysis, widget tests, Windows desktop build, and unsigned artifact upload all passed.
 - Live Supabase Auth/content: NOT RUN. No project URL/publishable key was injected into these platform builds and no approved safe account/redirect configuration was available. No Auth request, member query, or production write was made.
 
 ## Remaining safe implementation order
 
-1. Publish and record the Windows CI result for the Phase 3 commit.
-2. Inject the environment-specific Supabase URL and publishable key through local/CI secret handling, never committed files. Never request or package a service-role key.
-3. Get project-owner confirmation of enabled providers, exact Auth redirect allowlist, application identifiers, and one non-production safe account. Then perform only approved sign-in, sign-out, and public/member reads.
-4. Validate callback handling and session persistence on iOS, Android, and desktop after that redirect approval; keep email signup/recovery gated meanwhile.
-5. Add member-data read UI only after safe-account RLS/RPC positive and negative tests. Keep membership eligibility, consent, and authorization decisions in RLS/RPC.
-6. Defer all production writes (claims, profile/startup edits, registrations, uploads, notification updates) until the exact RPC/RLS contract and an explicit non-production test path are verified.
+1. Inject the environment-specific Supabase URL and publishable key through local/CI secret handling, never committed files. Never request or package a service-role key.
+2. Get project-owner confirmation of enabled providers, exact Auth redirect allowlist, application identifiers, and one non-production safe account. Then perform only approved sign-in, sign-out, and public/member reads.
+3. Validate callback handling and session persistence on iOS, Android, and desktop after that redirect approval; keep email signup/recovery gated meanwhile.
+4. Add member-data read UI only after safe-account RLS/RPC positive and negative tests. Keep membership eligibility, consent, and authorization decisions in RLS/RPC.
+5. Defer all production writes (claims, profile/startup edits, registrations, uploads, notification updates) until the exact RPC/RLS contract and an explicit non-production test path are verified.
 
 ## Current blockers and limits
 
