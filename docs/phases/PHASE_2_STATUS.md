@@ -1,50 +1,42 @@
 # Phase 2 — Adaptive design and navigation foundation
 
-**Status:** IN PROGRESS. The responsive shell, design foundation, and smoke coverage are implemented. Remaining accessibility, visual adaptation, and motion review still gate phase completion.
+**Status:** IN PROGRESS — local implementation and platform checks pass; Windows CI for this change set is pending. Do not start Phase 3 until that run passes and the completion report is written.
 
 ## Implemented
 
-- CSC palette, licensed Poppins typography, official CSC mark, and Material 3 theme.
-- Adaptive phone navigation, iOS tab treatment, tablet/desktop navigation rail, and keyboard shortcuts.
-- Branded public preview and community-section routes that hand off to current website pages while native integrations are not ready.
-- Responsive phone and desktop widget coverage.
-- Reproducible official app-icon generation for Apple, Android, and Windows targets via [`scripts/generate_app_icons.sh`](../../scripts/generate_app_icons.sh).
-- Temporary development identifiers; publisher ownership is not asserted.
+- Added a first-run, three-step CSC Circle introduction with branded reveal animation, page progress, explicit public-preview messaging, Skip, and locally persisted completion.
+- Added saved system/light/dark appearance and reduced-motion preferences. A bounded preference-load fallback prevents a slow local store from holding the user on the launch view indefinitely.
+- Added semantic color roles and light/dark themes; responsive iOS/macOS Cupertino controls and restrained translucent navigation, Android Material 3 navigation, and Windows/desktop Material adaptations.
+- Added keyboard destination shortcuts, visible focus behavior, screen-reader labels, larger-text scrolling, high-contrast blur fallback, and responsive layouts.
+- Downsampled cached brand imagery in the UI. Motion is limited to an 820 ms logo reveal and short page transition; there are no continuous animations or full-screen backdrop blurs.
+- Added phone onboarding and wide-desktop golden screenshots, expanded widget coverage, and a first-launch/navigation/persistence integration smoke test.
 
-## Verification
+## Local verification
 
-- `flutter analyze`: PASS.
-- `flutter test --reporter expanded`: PASS — 4 widget tests, including all five phone destinations and a compact 320 px layout at 2× text scaling.
-- Xcode MCP: connected to `ios/Runner.xcworkspace`; `Runner` scheme and iPhone 17 (iOS 26.4.1) destination selected. Xcode build passed (144 seconds).
-- iPhone 17 simulator: CSC Circle installed and launched. The visible first screen is the public home preview.
-- `flutter build macos --debug`: PASS.
-- `flutter build ios --debug --no-codesign`: PASS (compile only).
-- `flutter build ios --debug --simulator --no-codesign`: PASS.
-- iOS 26.4.1 iPhone 17 simulator integration test: PASS — opens home and navigates to Discover.
-- macOS integration test: PASS — opens home and navigates to Discover.
-- Android API 36 emulator integration test: PASS — opens home and navigates to Discover. Debug APK build passed (197 MB).
-- GitHub Windows runner: PASS — `flutter analyze`, widget tests, Windows release build, and unsigned artifact upload in [run 40220477021](https://github.com/coimbatorestartupcommunity-hub/csc-circle-app/actions/runs/40220477021).
-- `git diff --check`: PASS on the initial implementation commit; rerun after this update.
+- `flutter analyze`: PASS — no issues.
+- `flutter test --reporter expanded`: PASS — 19 widget tests, including 2 golden tests.
+- iPhone 17 / iOS 26.4.1: Xcode MCP `Runner` build PASS; Xcode build log has no errors; `Runner/AppDelegate.swift` diagnostics: 0. Flutter integration test PASS. Standalone first-run screen captured at [iOS onboarding](../evidence/ios26-iphone17-first-launch.png).
+- Android API 36 emulator: debug APK build PASS; integration test PASS. TalkBack was enabled on the emulator and bound successfully. Its accessibility tree exposed the onboarding heading, page state, Skip, and Next controls; TalkBack text-to-speech generated navigation speech. TalkBack was disabled afterward.
+- macOS: debug build and integration test PASS. The app was visible in the running macOS window and its navigation/content labels were inspectable. macOS VoiceOver was enabled for the accessibility check and restored to its previous off state afterward.
+- Widget tests exercise reduced motion, light/dark selection, 2× text scale, keyboard shortcut/focus, semantics actions, all five navigation destinations, and widths from 320 through 1920 logical pixels.
+- `git diff --check`: PASS.
 
-## Evidence
+## Screenshot and test evidence
 
-- [iOS iPhone 17 home](../evidence/ios26-iphone17-home.png)
-- [iOS iPhone 17 Discover](../evidence/ios26-iphone17-discover.png)
-- [Android API 36 Discover](../evidence/android36-emulator-discover.png)
-- Windows build logs and artifact: [GitHub Actions run](https://github.com/coimbatorestartupcommunity-hub/csc-circle-app/actions/runs/40220477021)
+- [Phone onboarding golden](../../test/goldens/phase2_onboarding_phone.png)
+- [Desktop home golden](../../test/goldens/phase2_desktop_home.png)
+- [iPhone 17 first launch](../evidence/ios26-iphone17-first-launch.png)
+- [Android API 36 first launch](../evidence/android36-first-launch.png)
+- Existing [iOS Home](../evidence/ios26-iphone17-home.png), [iOS Discover](../evidence/ios26-iphone17-discover.png), and [Android Discover](../evidence/android36-emulator-discover.png) captures remain preserved.
 
-## Remaining phase gate
+## Xcode diagnostics
 
-- Review light/dark themes, text scaling, contrast, keyboard focus, VoiceOver/TalkBack semantics, reduced motion, and platform safe areas on supported runtimes.
-- Add designed motion foundations and wider tablet/desktop coverage.
-- The app is platform-adaptive; Flutter surfaces are not claimed to be native Liquid Glass.
-- First-launch onboarding and an introductory animation are not implemented, so they cannot yet be verified.
-- Xcode MCP device interaction requires iOS 27.0 or newer and is unavailable on the installed iOS 26.4.1 simulator; the app was launched with CoreSimulator tools instead.
-- Xcode live indexing reported `No such module 'Flutter'` and an initial dependency graph response failure. The later Xcode build completed successfully; no Flutter/Dart or native source repair was needed.
-- Apple and Android targets rebuilt after icon asset replacement; Windows CI verified the generated Windows icon in [run 40224308612](https://github.com/coimbatorestartupcommunity-hub/csc-circle-app/actions/runs/40224308612). The test update passed Windows CI in [run 40226004254](https://github.com/coimbatorestartupcommunity-hub/csc-circle-app/actions/runs/40226004254).
+The stale generated-file issues in the supplied Xcode screenshot were cleared by refreshing Flutter-generated iOS artifacts and rebuilding. The latest Xcode build succeeds with no errors and the app delegate has zero diagnostics. Remaining Xcode warnings are quoted-include warnings emitted by headers inside the generated Flutter framework; no app-owned source warnings were reported.
 
-## Limits
+## Remaining gate
 
-- Xcode 27.1's iOS 27.1 simulator runtime download stalled at 0 bytes. iOS 26.4.1 is installed and tested.
-- Current source uses a public preview without a configured backend. It does not fabricate member/event content.
-- Windows output is unsigned and was built on a hosted Windows runner. Interactive launch, MSIX packaging, signing, and store verification are not complete.
+- Windows GitHub Actions must pass for this exact source/test change set before Phase 2 is marked complete.
+- Direct iOS VoiceOver focus movement was not exercised: the installed iOS simulator is 26.4.1 and Xcode MCP device interaction requires iOS 27 or newer. Flutter semantics are covered in tests, and VoiceOver was checked on the running macOS app. Keep this limitation visible in the completion report.
+- No native Apple Liquid Glass bridge was added; the app uses supported Flutter Cupertino controls and restrained translucent materials. Do not describe this as native Liquid Glass.
+- No measured release-mode frame profile was captured. Static motion/image review and automated overflow checks found no persistent animation or layout issue. Debug cold launches can show shader-compilation jank on the emulators.
+- The app is still an honestly labeled public preview. Supabase authentication and live member data remain Phase 3 work; no production records were changed.

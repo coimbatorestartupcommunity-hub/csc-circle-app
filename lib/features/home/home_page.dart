@@ -12,6 +12,7 @@ class HomePage extends StatelessWidget {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
+        final palette = CscPalette.of(context);
         final wide = constraints.maxWidth >= 900;
         final contentWidth = constraints.maxWidth >= 1200 ? 1120.0 : 1040.0;
         return SingleChildScrollView(
@@ -56,7 +57,7 @@ class HomePage extends StatelessWidget {
                   Text(
                     'A few good places to start.',
                     style: Theme.of(context).textTheme.bodyMedium
-                        ?.copyWith(color: CscColors.muted),
+                        ?.copyWith(color: palette.muted),
                   ),
                   const SizedBox(height: CscSpacing.md),
                   LayoutBuilder(
@@ -74,7 +75,7 @@ class HomePage extends StatelessWidget {
                             title: 'Find your next event',
                             subtitle: 'See dates, details, and registration.',
                             icon: Icons.event_available_rounded,
-                            tint: CscColors.blue,
+                            tint: palette.blue,
                             onTap: () => _selectSection(context, 1),
                           ),
                           _QuickLinkCard(
@@ -85,7 +86,7 @@ class HomePage extends StatelessWidget {
                             title: 'Meet the community',
                             subtitle: 'Browse founders and startups.',
                             icon: Icons.groups_rounded,
-                            tint: CscColors.purple,
+                            tint: palette.lavender,
                             onTap: () => _selectSection(context, 2),
                           ),
                           _QuickLinkCard(
@@ -96,7 +97,7 @@ class HomePage extends StatelessWidget {
                             title: 'Catch up on updates',
                             subtitle: 'Read the latest CSC stories.',
                             icon: Icons.auto_awesome_rounded,
-                            tint: CscColors.pink,
+                            tint: palette.pink,
                             onTap: () => _selectSection(context, 3),
                           ),
                         ],
@@ -128,30 +129,33 @@ class _PublicPreviewNotice extends StatelessWidget {
   const _PublicPreviewNotice();
 
   @override
-  Widget build(BuildContext context) => Container(
-    width: double.infinity,
-    padding: const EdgeInsets.all(CscSpacing.md),
-    decoration: BoxDecoration(
-      color: CscColors.gold,
-      borderRadius: BorderRadius.circular(CscRadius.control),
-    ),
-    child: const Row(
-      children: [
-        Icon(Icons.info_outline_rounded, color: CscColors.ink),
-        SizedBox(width: CscSpacing.sm),
-        Expanded(
-          child: Text(
-            'Public preview · Member sign-in and live content are being connected.',
-            style: TextStyle(
-              color: CscColors.ink,
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
+  Widget build(BuildContext context) {
+    final palette = CscPalette.of(context);
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(CscSpacing.md),
+      decoration: BoxDecoration(
+        color: palette.gold,
+        borderRadius: BorderRadius.circular(CscRadius.control),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.info_outline_rounded, color: palette.goldInk),
+          const SizedBox(width: CscSpacing.sm),
+          Expanded(
+            child: Text(
+              'Public preview · Member sign-in and live content are being connected.',
+              style: TextStyle(
+                color: palette.goldInk,
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+              ),
             ),
           ),
-        ),
-      ],
-    ),
-  );
+        ],
+      ),
+    );
+  }
 }
 
 class _HeroCard extends StatelessWidget {
@@ -159,16 +163,17 @@ class _HeroCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = CscPalette.of(context);
     return Container(
       constraints: const BoxConstraints(minHeight: 310),
       padding: const EdgeInsets.all(CscSpacing.xl),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
+        gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [CscColors.purple, CscColors.white, CscColors.blue],
+          colors: [palette.lavender, palette.surface, palette.blue],
         ),
-        border: Border.all(color: CscColors.border),
+        border: Border.all(color: palette.border),
         borderRadius: BorderRadius.circular(CscRadius.card),
       ),
       child: Stack(
@@ -183,7 +188,7 @@ class _HeroCard extends StatelessWidget {
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   border: Border.all(
-                    color: CscColors.accent.withAlpha(30),
+                    color: palette.accent.withAlpha(30),
                     width: 28,
                   ),
                 ),
@@ -210,7 +215,7 @@ class _HeroCard extends StatelessWidget {
                 Text(
                   'Connect. Build. Grow.',
                   style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    color: CscColors.accent,
+                    color: palette.accent,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -218,7 +223,7 @@ class _HeroCard extends StatelessWidget {
                 Text(
                   'Meet founders, exchange ideas, and discover ways to move your startup journey forward.',
                   style: Theme.of(context).textTheme.bodyLarge
-                      ?.copyWith(color: CscColors.secondary, height: 1.55),
+                      ?.copyWith(color: palette.secondary, height: 1.55),
                 ),
                 const SizedBox(height: CscSpacing.lg),
                 Wrap(
@@ -253,48 +258,55 @@ class _CommunityCard extends StatelessWidget {
   const _CommunityCard();
 
   @override
-  Widget build(BuildContext context) => Container(
-    constraints: const BoxConstraints(minHeight: 310),
-    padding: const EdgeInsets.all(CscSpacing.xl),
-    decoration: BoxDecoration(
-      color: CscColors.white,
-      borderRadius: BorderRadius.circular(CscRadius.card),
-      border: Border.all(color: CscColors.border),
-    ),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Container(
-          width: 76,
-          height: 76,
-          decoration: BoxDecoration(
-            color: CscColors.cloud,
-            borderRadius: BorderRadius.circular(22),
+  Widget build(BuildContext context) {
+    final palette = CscPalette.of(context);
+    return Container(
+      constraints: const BoxConstraints(minHeight: 310),
+      padding: const EdgeInsets.all(CscSpacing.xl),
+      decoration: BoxDecoration(
+        color: palette.surface,
+        borderRadius: BorderRadius.circular(CscRadius.card),
+        border: Border.all(color: palette.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Container(
+            width: 76,
+            height: 76,
+            decoration: BoxDecoration(
+              color: palette.canvas,
+              borderRadius: BorderRadius.circular(22),
+            ),
+            padding: const EdgeInsets.all(7),
+            child: Image.asset(
+              'assets/brand/csc-icon.png',
+              fit: BoxFit.contain,
+              cacheWidth: 256,
+            ),
           ),
-          padding: const EdgeInsets.all(7),
-          child: Image.asset('assets/brand/csc-icon.png', fit: BoxFit.contain),
-        ),
-        const SizedBox(height: CscSpacing.xl),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'A circle for builders',
-              style: Theme.of(context).textTheme.titleLarge
-                  ?.copyWith(fontWeight: FontWeight.w700),
-            ),
-            const SizedBox(height: CscSpacing.sm),
-            Text(
-              'CSC Circle brings Coimbatore’s founders, builders, creators, students, and professionals together.',
-              style: Theme.of(context).textTheme.bodyMedium
-                  ?.copyWith(color: CscColors.muted, height: 1.6),
-            ),
-          ],
-        ),
-      ],
-    ),
-  );
+          const SizedBox(height: CscSpacing.xl),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'A circle for builders',
+                style: Theme.of(context).textTheme.titleLarge
+                    ?.copyWith(fontWeight: FontWeight.w700),
+              ),
+              const SizedBox(height: CscSpacing.sm),
+              Text(
+                'CSC Circle brings Coimbatore’s founders, builders, creators, students, and professionals together.',
+                style: Theme.of(context).textTheme.bodyMedium
+                    ?.copyWith(color: palette.muted, height: 1.6),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 class _QuickLinkCard extends StatelessWidget {
@@ -315,100 +327,109 @@ class _QuickLinkCard extends StatelessWidget {
   final VoidCallback onTap;
 
   @override
-  Widget build(BuildContext context) => SizedBox(
-    width: width,
-    child: Card(
-      child: InkWell(
-        borderRadius: BorderRadius.circular(CscRadius.card),
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.all(CscSpacing.md),
-          child: Row(
-            children: [
-              Container(
-                width: 48,
-                height: 48,
-                decoration: BoxDecoration(
-                  color: tint,
-                  borderRadius: BorderRadius.circular(CscRadius.control),
+  Widget build(BuildContext context) {
+    final palette = CscPalette.of(context);
+    return SizedBox(
+      width: width,
+      child: Card(
+        child: InkWell(
+          borderRadius: BorderRadius.circular(CscRadius.card),
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.all(CscSpacing.md),
+            child: Row(
+              children: [
+                Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: tint,
+                    borderRadius: BorderRadius.circular(CscRadius.control),
+                  ),
+                  child: Icon(icon, color: palette.ink),
                 ),
-                child: Icon(icon, color: CscColors.ink),
-              ),
-              const SizedBox(width: CscSpacing.md),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: const TextStyle(
-                        color: CscColors.ink,
-                        fontWeight: FontWeight.w600,
+                const SizedBox(width: CscSpacing.md),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: TextStyle(
+                          color: palette.ink,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 3),
-                    Text(
-                      subtitle,
-                      style: const TextStyle(
-                        color: CscColors.muted,
-                        fontSize: 12,
-                        height: 1.45,
+                      const SizedBox(height: 3),
+                      Text(
+                        subtitle,
+                        style: TextStyle(
+                          color: palette.muted,
+                          fontSize: 12,
+                          height: 1.45,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-              const SizedBox(width: CscSpacing.xs),
-              const Icon(Icons.arrow_forward_rounded, size: 19),
-            ],
+                const SizedBox(width: CscSpacing.xs),
+                const Icon(Icons.arrow_forward_rounded, size: 19),
+              ],
+            ),
           ),
         ),
       ),
-    ),
-  );
+    );
+  }
 }
 
 class _OpportunitiesStrip extends StatelessWidget {
   const _OpportunitiesStrip();
 
   @override
-  Widget build(BuildContext context) => Container(
-    padding: const EdgeInsets.all(CscSpacing.lg),
-    decoration: BoxDecoration(
-      color: CscColors.ink,
-      borderRadius: BorderRadius.circular(CscRadius.card),
-    ),
-    child: Row(
-      children: [
-        const Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Resources & opportunities',
-                style: TextStyle(
-                  color: CscColors.white,
-                  fontSize: 17,
-                  fontWeight: FontWeight.w700,
+  Widget build(BuildContext context) {
+    final palette = CscPalette.of(context);
+    return Container(
+      padding: const EdgeInsets.all(CscSpacing.lg),
+      decoration: BoxDecoration(
+        color: palette.inverseSurface,
+        borderRadius: BorderRadius.circular(CscRadius.card),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Resources & opportunities',
+                  style: TextStyle(
+                    color: palette.inverseInk,
+                    fontSize: 17,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
-              ),
-              SizedBox(height: CscSpacing.xs),
-              Text(
-                'Find useful guides and current ways to get involved.',
-                style: TextStyle(color: Color(0xFFD8DEEA), height: 1.5),
-              ),
-            ],
+                SizedBox(height: CscSpacing.xs),
+                Text(
+                  'Find useful guides and current ways to get involved.',
+                  style: TextStyle(
+                    color: palette.inverseInk.withAlpha(220),
+                    height: 1.5,
+                  ),
+                ),
+              ],
+            ),
           ),
-        ),
-        const SizedBox(width: CscSpacing.md),
-        IconButton.filledTonal(
-          tooltip: 'Open CSC Circle resources',
-          onPressed: () => openCscWebsite(context, '/resources'),
-          icon: const Icon(Icons.arrow_forward_rounded),
-        ),
-      ],
-    ),
-  );
+          const SizedBox(width: CscSpacing.md),
+          IconButton.filledTonal(
+            tooltip: 'Open CSC Circle resources',
+            onPressed: () => openCscWebsite(context, '/resources'),
+            icon: const Icon(Icons.arrow_forward_rounded),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 class _Eyebrow extends StatelessWidget {
@@ -417,13 +438,16 @@ class _Eyebrow extends StatelessWidget {
   final String label;
 
   @override
-  Widget build(BuildContext context) => Text(
-    label,
-    style: const TextStyle(
-      color: CscColors.accent,
-      fontSize: 10,
-      fontWeight: FontWeight.w700,
-      letterSpacing: 1.6,
-    ),
-  );
+  Widget build(BuildContext context) {
+    final palette = CscPalette.of(context);
+    return Text(
+      label,
+      style: TextStyle(
+        color: palette.accent,
+        fontSize: 10,
+        fontWeight: FontWeight.w700,
+        letterSpacing: 1.6,
+      ),
+    );
+  }
 }
