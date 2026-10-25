@@ -33,6 +33,7 @@
 - Android 16 / API 36: PASS — `flutter build apk --debug` succeeded; installed and launched the normal debug app with `flutter run -d emulator-5554 --debug`. Screenshot inspection confirmed Flutter onboarding and the `Public preview` state. After clearing an old stale ADB logcat process, `flutter test integration_test/app_smoke_test.dart -d emulator-5554` passed one test covering onboarding, Skip persistence, Home and Discover navigation.
 - macOS 27.2: PASS — configured `flutter build macos --debug` succeeded; `flutter run -d macos --debug --dart-define-from-file=dart_defines.json` launched the app and the CSC Circle window rendered its signed-out Account screen.
 - Windows CI: PASS — [run 40237973967](https://github.com/coimbatorestartupcommunity-hub/csc-circle-app/actions/runs/40237973967) for implementation commit `b5780a8`; Dart analysis, widget tests, Windows desktop build, and unsigned artifact upload all passed.
+- Latest Windows CI: PASS — [run 40241934577](https://github.com/coimbatorestartupcommunity-hub/csc-circle-app/actions/runs/40241934577) for commit `f1a5582`; analysis, all widget tests, Windows desktop build, and unsigned artifact upload passed.
 - Authenticated Supabase Auth/session/callback and member-data calls: NOT RUN. No approved provider/redirect settings or isolated test identity were available. No Auth request, member query, or production write was made.
 
 ## Additional live checks (2026-10-26)

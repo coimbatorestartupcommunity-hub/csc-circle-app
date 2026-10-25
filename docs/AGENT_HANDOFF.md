@@ -21,7 +21,7 @@
 - Configured iPhone 17 / iOS 26.4 integration: PASS — onboarding/navigation plus all four public content screens; Resources displays the expected safe forbidden state.
 - Configured Android API 36 integration: PASS — same four public content screens and safe Resources forbidden state. Debug APK built and installed.
 - macOS 27.2 configured debug build passed; `flutter run -d macos` launched a CSC Circle window at the signed-out Account screen.
-- Windows Actions PASS for Phase 3 implementation commit `b5780a8`; [run 40237973967](https://github.com/coimbatorestartupcommunity-hub/csc-circle-app/actions/runs/40237973967) passed analysis, widget tests, Windows desktop build, and artifact upload.
+- Windows Actions PASS for implementation commit `b5780a8` in [run 40237973967](https://github.com/coimbatorestartupcommunity-hub/csc-circle-app/actions/runs/40237973967), and latest [run 40241934577](https://github.com/coimbatorestartupcommunity-hub/csc-circle-app/actions/runs/40241934577) for `f1a5582` passed analysis, all widget tests, Windows desktop build, and artifact upload.
 
 ## Phase 2 limitations
 
