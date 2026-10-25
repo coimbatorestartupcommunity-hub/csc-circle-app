@@ -1,6 +1,6 @@
 # Phase 2 — Adaptive design and navigation foundation
 
-**Status:** IN PROGRESS — local implementation and platform checks pass; Windows CI for this change set is pending. Do not start Phase 3 until that run passes and the completion report is written.
+**Status:** COMPLETE — acceptance evidence and Windows CI are recorded in [PHASE_2_COMPLETE.md](PHASE_2_COMPLETE.md). Phase 3 backend audit is now underway.
 
 ## Implemented
 
@@ -34,10 +34,9 @@
 
 The stale generated-file issues in the supplied Xcode screenshot were cleared by refreshing Flutter-generated iOS artifacts and rebuilding. The latest Xcode build succeeds with no errors and the app delegate has zero diagnostics. Remaining Xcode warnings are quoted-include warnings emitted by headers inside the generated Flutter framework; no app-owned source warnings were reported.
 
-## Remaining gate
+## Limitations carried forward
 
-- Windows GitHub Actions must pass for this exact source/test change set before Phase 2 is marked complete.
 - Direct iOS VoiceOver focus movement was not exercised: the installed iOS simulator is 26.4.1 and Xcode MCP device interaction requires iOS 27 or newer. Flutter semantics are covered in tests, and VoiceOver was checked on the running macOS app. Keep this limitation visible in the completion report.
 - No native Apple Liquid Glass bridge was added; the app uses supported Flutter Cupertino controls and restrained translucent materials. Do not describe this as native Liquid Glass.
-- No measured release-mode frame profile was captured. Static motion/image review and automated overflow checks found no persistent animation or layout issue. Debug cold launches can show shader-compilation jank on the emulators.
+- Performance audit found one finite 820 ms brand reveal, short page transitions, cached/downsampled local imagery, and no perpetual animations or full-screen blur. Automated responsive tests produced no layout exceptions at widths 320–1920. A profile-mode Android cold launch logged 119 skipped frames on its first frame; the emulator's `gfxinfo` did not expose Flutter surface frame data afterward, so a trustworthy cold-start/frame-time profile remains outstanding for later performance work.
 - The app is still an honestly labeled public preview. Supabase authentication and live member data remain Phase 3 work; no production records were changed.

@@ -1,5 +1,7 @@
 # CSC Circle web and backend audit for the native client
 
+**Latest read-only recheck:** 2026-10-26. The original source audit below was rechecked against the current local web checkout and live Supabase project metadata/policies; no member rows were read and no writes were made.
+
 **Source inspected:** local `csc-circle` checkout, branch `phase4/local-email-notifications-collaboration`; its current worktree has unrelated uncommitted files and was left untouched. Findings below describe source and existing audit evidence, not a fresh production transaction.
 
 ## Observed architecture
@@ -37,3 +39,13 @@
 3. Keep server-only operations (membership approval, event capacity, account deletion, media publication, notifications, admin actions) out of direct client writes unless a verified invoker RPC enforces the policy.
 4. The website worktree contains user changes; it is not a clean integration branch. Do not edit it in place.
 5. Production auth/RLS/storage metadata should be rechecked read-only with an authenticated owner session before release. No transaction was run here.
+
+## Live metadata and policy recheck (2026-10-26)
+
+- Supabase MCP returned one existing project named `csc-circle-production`, active/healthy, running PostgreSQL 17.11. No project was created or changed.
+- The remote migration history ends at `20261024130000_community_updates_cms`, which matches the latest migration in the checked-out web repository.
+- Catalog-only policy checks confirmed RLS for the audited public/member tables. Published content reads are restricted by publication status; opportunities additionally exclude expired deadlines using `Asia/Kolkata` date semantics. Profile, membership, and claim self-access is tied to `auth.uid()`. Notifications are constrained by recipient, in-app channel, and available status.
+- Live function metadata confirmed `csc_register_event` is `SECURITY INVOKER`; directory list/detail RPCs are `SECURITY DEFINER`. Their local migration definitions enforce active-member/consent rules, empty search path, and authenticated-only grants. No authenticated request or member-record write was performed.
+- Flutter bootstrap has an initial PKCE + secure-storage configuration path, but no Auth UI, callback/deep-link setup, or Data API client operations. Build configuration is currently absent by default, preserving public-preview behavior.
+
+This is a metadata/source audit, not a full authorization penetration test or owner-authenticated feature smoke test. Recheck the project with an approved non-production account before enabling member-facing functionality.
