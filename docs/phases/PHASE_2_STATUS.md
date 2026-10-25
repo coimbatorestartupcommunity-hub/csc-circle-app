@@ -14,7 +14,9 @@
 ## Verification
 
 - `flutter analyze`: PASS.
-- `flutter test --reporter expanded`: PASS — 2 widget tests.
+- `flutter test --reporter expanded`: PASS — 4 widget tests, including all five phone destinations and a compact 320 px layout at 2× text scaling.
+- Xcode MCP: connected to `ios/Runner.xcworkspace`; `Runner` scheme and iPhone 17 (iOS 26.4.1) destination selected. Xcode build passed (144 seconds).
+- iPhone 17 simulator: CSC Circle installed and launched. The visible first screen is the public home preview.
 - `flutter build macos --debug`: PASS.
 - `flutter build ios --debug --no-codesign`: PASS (compile only).
 - `flutter build ios --debug --simulator --no-codesign`: PASS.
@@ -36,7 +38,10 @@
 - Review light/dark themes, text scaling, contrast, keyboard focus, VoiceOver/TalkBack semantics, reduced motion, and platform safe areas on supported runtimes.
 - Add designed motion foundations and wider tablet/desktop coverage.
 - The app is platform-adaptive; Flutter surfaces are not claimed to be native Liquid Glass.
-- Apple and Android targets rebuilt after icon asset replacement; Windows CI will verify the generated Windows icon on the follow-up commit.
+- First-launch onboarding and an introductory animation are not implemented, so they cannot yet be verified.
+- Xcode MCP device interaction requires iOS 27.0 or newer and is unavailable on the installed iOS 26.4.1 simulator; the app was launched with CoreSimulator tools instead.
+- Xcode live indexing reported `No such module 'Flutter'` and an initial dependency graph response failure. The later Xcode build completed successfully; no Flutter/Dart or native source repair was needed.
+- Apple and Android targets rebuilt after icon asset replacement; Windows CI verified the generated Windows icon in [run 40224308612](https://github.com/coimbatorestartupcommunity-hub/csc-circle-app/actions/runs/40224308612). The test update passed Windows CI in [run 40226004254](https://github.com/coimbatorestartupcommunity-hub/csc-circle-app/actions/runs/40226004254).
 
 ## Limits
 
