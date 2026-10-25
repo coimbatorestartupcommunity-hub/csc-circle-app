@@ -30,7 +30,62 @@ void main() {
     await tester.tap(find.text('Discover'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Discover founders'), findsOneWidget);
-    expect(find.text('Explore the directory'), findsOneWidget);
+    expect(find.text('Discover founders').hitTestable(), findsOneWidget);
+    expect(find.text('Explore the directory').hitTestable(), findsOneWidget);
+  });
+
+  testWidgets('all five phone destinations show their matching page', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(390, 844);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await tester.pumpWidget(const CscCircleApp());
+
+    const destinations = <(String, String, int)>[
+      ('Events', 'Browse events', 1),
+      ('Discover', 'Explore the directory', 2),
+      ('Updates', 'Read updates', 3),
+      ('Profile', 'Continue to sign in', 4),
+      ('Home', 'Explore CSC Circle', 0),
+    ];
+
+    for (final (label, pageAction, selectedIndex) in destinations) {
+      await tester.tap(find.text(label).hitTestable().last);
+      await tester.pumpAndSettle();
+
+      final navigationBar = tester.widget<NavigationBar>(
+        find.byType(NavigationBar),
+      );
+      expect(navigationBar.selectedIndex, selectedIndex, reason: label);
+      await tester.ensureVisible(find.text(pageAction).last);
+      await tester.pumpAndSettle();
+      expect(
+        find.text(pageAction).hitTestable(),
+        findsOneWidget,
+        reason: '$label destination should expose its page action',
+      );
+    }
+  });
+
+  testWidgets('compact 320px layout remains usable at 2x text scale', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(320, 720);
+    tester.view.devicePixelRatio = 1;
+    tester.platformDispatcher.textScaleFactorTestValue = 2;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+
+    await tester.pumpWidget(const CscCircleApp());
+    await tester.pumpAndSettle();
+
+    await tester.ensureVisible(find.text('Explore CSC Circle'));
+    await tester.pumpAndSettle();
+    expect(find.text('Explore CSC Circle').hitTestable(), findsOneWidget);
+    expect(tester.takeException(), isNull);
   });
 }
