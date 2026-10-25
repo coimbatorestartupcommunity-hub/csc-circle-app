@@ -6,8 +6,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../core/design/app_theme.dart';
+import '../core/backend/public_content.dart';
 import '../features/onboarding/onboarding_page.dart';
 import '../features/home/home_page.dart';
+import '../features/content/public_content_page.dart';
+import '../features/auth/account_page.dart';
+import '../features/auth/auth_repository.dart';
 import '../features/sections/community_section_page.dart';
 import 'csc_circle_app.dart';
 
@@ -15,6 +19,8 @@ class CscAppShell extends StatefulWidget {
   const CscAppShell({
     super.key,
     required this.backendConfigured,
+    this.authRepository,
+    this.publicContentRepository,
     required this.showOnboarding,
     required this.themeMode,
     required this.reduceMotion,
@@ -24,6 +30,8 @@ class CscAppShell extends StatefulWidget {
   });
 
   final bool backendConfigured;
+  final AuthRepository? authRepository;
+  final PublicContentRepository? publicContentRepository;
   final bool showOnboarding;
   final ThemeMode themeMode;
   final bool reduceMotion;
@@ -46,16 +54,22 @@ class _CscAppShellState extends State<CscAppShell> {
 
   late final List<Widget> _pages = [
     const HomePage(),
-    const CommunitySectionPage(
-      title: 'Events',
-      eyebrow: 'MEET, LEARN, BUILD',
-      description: 'Explore current CSC Circle events, booking information, and member registration details.',
-      icon: Icons.event_available_rounded,
-      tint: CscColors.blue,
-      websitePath: '/events',
-      actionLabel: 'Browse events',
-      detail: 'Event availability and registration eligibility come from the CSC Circle platform.',
-    ),
+    widget.publicContentRepository == null
+        ? const CommunitySectionPage(
+            title: 'Events',
+            eyebrow: 'MEET, LEARN, BUILD',
+            description: 'Explore current CSC Circle events, booking information, and member registration details.',
+            icon: Icons.event_available_rounded,
+            tint: CscColors.blue,
+            websitePath: '/events',
+            actionLabel: 'Browse events',
+            detail:
+                'Live event content is not configured in this preview build.',
+          )
+        : PublicContentPage(
+            kind: PublicContentKind.events,
+            repository: widget.publicContentRepository!,
+          ),
     const CommunitySectionPage(
       title: 'Discover founders',
       eyebrow: 'PEOPLE AND STARTUPS',
@@ -66,26 +80,24 @@ class _CscAppShellState extends State<CscAppShell> {
       actionLabel: 'Explore the directory',
       detail: 'Profiles appear according to each member’s current publication and visibility choices.',
     ),
-    const CommunitySectionPage(
-      title: 'Community updates',
-      eyebrow: 'WHAT’S HAPPENING',
-      description: 'Read published community news, event highlights, collaborations, and milestones.',
-      icon: Icons.auto_awesome_rounded,
-      tint: CscColors.pink,
-      websitePath: '/updates',
-      actionLabel: 'Read updates',
-      detail: 'Only updates published by CSC are visible to the community.',
-    ),
-    CommunitySectionPage(
-      title: 'Your CSC Circle',
-      eyebrow: 'MEMBER SPACE',
-      description: 'Sign in to manage your profile, membership details, event registrations, and preferences.',
-      icon: Icons.account_circle_rounded,
-      tint: CscColors.gold,
-      websitePath: '/login',
-      actionLabel: 'Continue to sign in',
-      detail: 'Native account access is being connected to the existing CSC Circle identity.',
-      showSignInNote: true,
+    widget.publicContentRepository == null
+        ? const CommunitySectionPage(
+            title: 'Community updates',
+            eyebrow: 'WHAT’S HAPPENING',
+            description: 'Read published community news, event highlights, collaborations, and milestones.',
+            icon: Icons.auto_awesome_rounded,
+            tint: CscColors.pink,
+            websitePath: '/updates',
+            actionLabel: 'Read updates',
+            detail: 'Live community updates are not configured in this preview build.',
+          )
+        : PublicContentPage(
+            kind: PublicContentKind.updates,
+            repository: widget.publicContentRepository!,
+          ),
+    AccountPage(
+      repository: widget.authRepository,
+      backendConfigured: widget.backendConfigured,
     ),
   ];
 
@@ -297,25 +309,43 @@ class _CscAppShellState extends State<CscAppShell> {
 
   Widget get _currentPage => CscNavigationScope(
     select: _selectDestination,
+    openPublicContent: _openPublicContent,
     child: IndexedStack(index: _selectedIndex, children: _pages),
   );
+
+  void _openPublicContent(PublicContentKind kind) {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => PublicContentPage(
+          kind: kind,
+          repository: widget.publicContentRepository,
+        ),
+      ),
+    );
+  }
 }
 
 class CscNavigationScope extends InheritedWidget {
   const CscNavigationScope({
     super.key,
     required this.select,
+    required this.openPublicContent,
     required super.child,
   });
 
   final ValueChanged<int> select;
+  final ValueChanged<PublicContentKind> openPublicContent;
 
   static CscNavigationScope? maybeOf(BuildContext context) =>
       context.dependOnInheritedWidgetOfExactType<CscNavigationScope>();
 
+  static void openContent(BuildContext context, PublicContentKind kind) =>
+      maybeOf(context)?.openPublicContent(kind);
+
   @override
   bool updateShouldNotify(CscNavigationScope oldWidget) =>
-      select != oldWidget.select;
+      select != oldWidget.select ||
+      openPublicContent != oldWidget.openPublicContent;
 }
 
 Widget _platformRail(

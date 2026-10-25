@@ -1,6 +1,6 @@
 # Mobile API contracts
 
-**Contract generation status:** Phase 3 audit baseline. `main.dart` conditionally initializes the Supabase Flutter client with PKCE and platform secure storage, but no Auth screen or Data API/RPC calls have been added yet.
+**Contract generation status:** Phase 3 implementation. Flutter initializes the existing Supabase project with PKCE and platform secure storage when URL and publishable key are injected. Public content clients and fixture-backed request tests are implemented. Member reads are prepared but not called; real Auth and live-data verification await approved configuration/test credentials.
 
 ## Rules
 
@@ -12,18 +12,18 @@
 6. Cache only public content or explicitly user-scoped records. Key private cache by Supabase user UUID, clear it on sign-out/account switch, and do not persist tokens in app state or logs.
 7. Writes should be idempotent or reconcile uncertain network outcomes before retry. Use bounded exponential backoff for safe reads; never auto-retry a non-idempotent write blindly.
 
-## Candidate read contracts (not yet wired)
+## Read contracts
 
 | Domain | Candidate operation | Access contract | Status |
 |---|---|---|---|
-| Public updates | Published-only `community_updates` select with explicit field list, ordered featured/date, bounded page | `anon`/authenticated RLS only; never draft | Source-confirmed; Flutter fixture tests pending |
-| Resources | Published `resources` select; detail/download uses verified website route | Publication RLS and server-side document check | Source-confirmed; client not wired |
-| Opportunities | Published and date-eligible select | Preserve IST deadline rule | Source-confirmed; client not wired |
-| Events | Published event list with explicit fields | Existing public event visibility | Source-confirmed; schema fixture pending |
+| Public updates | `community_updates`: `id,slug,title,category,summary,featured,cover_image_path,cover_image_alt,published_at`; `publication_status=published`, `featured DESC, published_at DESC`, range pagination (default 20, max 50) | `anon`/authenticated RLS only; never draft | Implemented and fixture-tested |
+| Resources | `resources`: `id,slug,title,category,resource_type,summary,tags,thumbnail_path,external_url,published_at`; `publication_status=published`, `published_at DESC`, range pagination; no private document fields | Publication RLS and server-side document check | Implemented and fixture-tested; details/download routes not wired |
+| Opportunities | `opportunities`: `id,title,category,summary,organization,deadline,starts_on,application_url`; `publication_status=published`, unset or `deadline >= Asia/Kolkata current date`, deadline ascending then publish date descending; range pagination | Preserve IST deadline rule | Implemented and fixture-tested |
+| Events | `events`: `id,title,category,description,cover_image,starts_at,ends_at,location,venue`; `status=published`, `starts_at ASC`, range pagination | Existing public event visibility | Implemented and fixture-tested |
 | Event registration | `csc_register_event` | Authenticated active member; RPC owns capacity/duplicate/waitlist transaction | RPC source-confirmed; no production write |
 | Member directory | `list_discoverable_members(p_search, p_limit, p_offset)` and `get_discoverable_member(p_member_id)` | Active membership + sharing/consent rules enforced by database | RPC source-confirmed; authenticated integration pending |
-| Notification inbox | `csc_member_notification_inbox()` | Valid active session; invoker/RLS scope to caller | RPC source-confirmed; authenticated integration pending |
-| Membership claims/profile/startups | Existing member RPCs and owner-scoped tables | Per-action policy and consent checks required | Not wired; more schema review required |
+| Notification inbox | `csc_member_notification_inbox()` | Valid active session; invoker/RLS scope to caller | Typed read repository prepared; intentionally not called pending approved safe account |
+| Membership claims/profile/startups | Existing owner-scoped `profiles`, `memberships`, `directory_startups` reads with explicit columns | Caller UID predicate plus RLS; no verification tokens | Typed read repository prepared; intentionally not called pending approved safe account |
 
 ## Live read-only contract verification (2026-10-26)
 
@@ -37,6 +37,15 @@ Checked the existing `csc-circle-production` project through Supabase MCP using 
 - `list_discoverable_members` and `get_discoverable_member` are `SECURITY DEFINER`; the audited definitions set an empty search path, require an active caller and active target, return only consented fields, revoke execution from `anon`/`public`, and grant it to `authenticated`.
 
 These checks verify current policy metadata, not successful member login or end-to-end authorization. Do not test by writing production rows. Before enabling a feature, add a local Supabase fixture/contract test and confirm behavior with an approved non-production test account.
+
+### Flutter implementation details
+
+- Implementation: `lib/core/backend/public_content.dart`, `lib/core/backend/member_data_repository.dart`, `lib/features/content/public_content_page.dart`.
+- Public query failures map to offline, unauthorized, forbidden, invalid-response, or generic server categories; 15-second request timeouts are applied. Public pages display explicit loading, retry, empty, and no-config preview states.
+- `limit` is clamped to 1–50 and the UI uses 20-row pages. Events order oldest upcoming/start date first; updates prioritize featured and recency; resources sort by recency; opportunities sort by eligible deadline and recency.
+- Member repository methods always derive the user id from the SDK session and do not accept arbitrary user ids. No member methods are referenced by the app shell yet.
+- Auth uses `SupabaseAuthRepository`, SDK-managed PKCE callback handling, and `SecureSessionStorage`. Native redirect registration exists for iOS, macOS, and Android, while signup/recovery remain disabled unless `CSC_AUTH_REDIRECT_APPROVED=true` and the URL/key are present.
+- Fixture tests are in `test/public_content_repository_test.dart` and `test/phase3_auth_widget_test.dart`; they use no live key, database, or member record.
 
 ## Error and retry taxonomy
 

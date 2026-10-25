@@ -62,6 +62,12 @@ void main() {
       addTearDown(tester.view.resetDevicePixelRatio);
 
       await tester.pumpWidget(_homeApp());
+      await tester.runAsync(
+        () => precacheImage(
+          const AssetImage('assets/brand/csc-icon.png'),
+          tester.element(find.byType(MaterialApp)),
+        ),
+      );
       await tester.pumpAndSettle();
 
       await expectLater(
@@ -176,7 +182,7 @@ void main() {
       ('Events', 'Browse events', 1),
       ('Discover', 'Explore the directory', 2),
       ('Updates', 'Read updates', 3),
-      ('Profile', 'Continue to sign in', 4),
+      ('Profile', 'CSC Circle public preview', 4),
       ('Home', 'Explore CSC Circle', 0),
     ];
 

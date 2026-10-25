@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../app/app_shell.dart';
+import '../../core/backend/public_content.dart';
 import '../../core/config/app_config.dart';
 import '../../core/design/app_theme.dart';
 import '../sections/community_section_page.dart';
@@ -395,36 +396,47 @@ class _OpportunitiesStrip extends StatelessWidget {
         color: palette.inverseSurface,
         borderRadius: BorderRadius.circular(CscRadius.card),
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Resources & opportunities',
-                  style: TextStyle(
-                    color: palette.inverseInk,
-                    fontSize: 17,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                SizedBox(height: CscSpacing.xs),
-                Text(
-                  'Find useful guides and current ways to get involved.',
-                  style: TextStyle(
-                    color: palette.inverseInk.withAlpha(220),
-                    height: 1.5,
-                  ),
-                ),
-              ],
+          Text(
+            'Resources & opportunities',
+            style: TextStyle(
+              color: palette.inverseInk,
+              fontSize: 17,
+              fontWeight: FontWeight.w700,
             ),
           ),
-          const SizedBox(width: CscSpacing.md),
-          IconButton.filledTonal(
-            tooltip: 'Open CSC Circle resources',
-            onPressed: () => openCscWebsite(context, '/resources'),
-            icon: const Icon(Icons.arrow_forward_rounded),
+          const SizedBox(height: CscSpacing.xs),
+          Text(
+            'Find useful guides and current ways to get involved.',
+            style: TextStyle(
+              color: palette.inverseInk.withAlpha(220),
+              height: 1.5,
+            ),
+          ),
+          const SizedBox(height: CscSpacing.md),
+          Wrap(
+            spacing: CscSpacing.sm,
+            runSpacing: CscSpacing.sm,
+            children: [
+              OutlinedButton.icon(
+                onPressed: () => CscNavigationScope.openContent(
+                  context,
+                  PublicContentKind.resources,
+                ),
+                icon: const Icon(Icons.menu_book_outlined),
+                label: const Text('Resources'),
+              ),
+              FilledButton.tonalIcon(
+                onPressed: () => CscNavigationScope.openContent(
+                  context,
+                  PublicContentKind.opportunities,
+                ),
+                icon: const Icon(Icons.lightbulb_outline_rounded),
+                label: const Text('Opportunities'),
+              ),
+            ],
           ),
         ],
       ),

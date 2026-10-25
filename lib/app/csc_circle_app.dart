@@ -4,17 +4,23 @@ import 'package:flutter/material.dart';
 
 import '../core/preferences/app_preferences.dart';
 import '../core/design/app_theme.dart';
+import '../core/backend/public_content.dart';
+import '../features/auth/auth_repository.dart';
 import 'app_shell.dart';
 
 class CscCircleApp extends StatefulWidget {
   const CscCircleApp({
     super.key,
     this.backendConfigured = false,
+    this.authRepository,
+    this.publicContentRepository,
     this.preferencesStore = const SharedPreferencesAppPreferencesStore(),
     this.initialPreferences,
   });
 
   final bool backendConfigured;
+  final AuthRepository? authRepository;
+  final PublicContentRepository? publicContentRepository;
   final AppPreferencesStore preferencesStore;
   final AppPreferencesSnapshot? initialPreferences;
 
@@ -77,6 +83,8 @@ class _CscCircleAppState extends State<CscCircleApp> {
           ? const _AppStartingPage()
           : CscAppShell(
               backendConfigured: widget.backendConfigured,
+              authRepository: widget.authRepository,
+              publicContentRepository: widget.publicContentRepository,
               showOnboarding: !preferences.onboardingComplete,
               themeMode: preferences.themeMode,
               reduceMotion: preferences.reduceMotion,
