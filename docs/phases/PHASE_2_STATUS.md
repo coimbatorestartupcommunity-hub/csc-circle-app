@@ -15,6 +15,7 @@
 
 - `flutter analyze`: PASS — no issues.
 - `flutter test --reporter expanded`: PASS — 19 widget tests, including 2 golden tests.
+- Windows CI revealed expected host-font rasterization differences in the two image goldens. Those pixel comparisons now skip on Windows; all onboarding, layout, accessibility, settings, and navigation behavior tests still run there.
 - iPhone 17 / iOS 26.4.1: Xcode MCP `Runner` build PASS; Xcode build log has no errors; `Runner/AppDelegate.swift` diagnostics: 0. Flutter integration test PASS. Standalone first-run screen captured at [iOS onboarding](../evidence/ios26-iphone17-first-launch.png).
 - Android API 36 emulator: debug APK build PASS; integration test PASS. TalkBack was enabled on the emulator and bound successfully. Its accessibility tree exposed the onboarding heading, page state, Skip, and Next controls; TalkBack text-to-speech generated navigation speech. TalkBack was disabled afterward.
 - macOS: debug build and integration test PASS. The app was visible in the running macOS window and its navigation/content labels were inspectable. macOS VoiceOver was enabled for the accessibility check and restored to its previous off state afterward.
