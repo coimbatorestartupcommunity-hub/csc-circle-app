@@ -1,0 +1,38 @@
+# Flutter and Dart
+.dart_tool/
+.packages
+.pub-cache/
+.flutter-plugins
+.flutter-plugins-dependencies
+.metadata
+build/
+coverage/
+*.freezed.dart.tmp
+
+# Local app configuration and signing material
+dart_defines.json
+.env
+.env.*
+!.env.example
+*.jks
+*.keystore
+*.p12
+*.mobileprovision
+*.provisionprofile
+*.p8
+key.properties
+GoogleService-Info.plist
+google-services.json
+
+# Native build output
+ios/Flutter/Generated.xcconfig
+ios/Flutter/flutter_export_environment.sh
+macos/Flutter/GeneratedPluginRegistrant.swift
+android/local.properties
+windows/flutter/generated_plugin_registrant.cc
+windows/flutter/generated_plugins.cmake
+
+# Editors and OS files
+.DS_Store
+.idea/
+.vscode/

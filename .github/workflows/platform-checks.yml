@@ -1,0 +1,53 @@
+name: Platform checks
+
+on:
+  push:
+    branches: [main, "work/**"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: platform-checks-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  windows:
+    name: Windows desktop build and tests
+    runs-on: windows-latest
+    timeout-minutes: 45
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v7
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: 3.47.8
+          cache: true
+
+      - name: Record toolchain
+        run: flutter --version
+
+      - name: Resolve dependencies
+        run: flutter pub get --enforce-lockfile
+
+      - name: Analyze Dart
+        run: flutter analyze
+
+      - name: Run widget tests
+        run: flutter test --reporter expanded
+
+      - name: Build Windows desktop app
+        run: flutter build windows --release
+
+      - name: Upload unsigned Windows build
+        uses: actions/upload-artifact@v7
+        with:
+          name: csc-circle-windows-release-${{ github.run_number }}
+          path: build/windows/x64/runner/Release/
+          if-no-files-found: error
+          retention-days: 7
