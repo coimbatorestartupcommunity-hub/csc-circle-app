@@ -149,7 +149,7 @@ class _SignInStatusNote extends StatelessWidget {
         borderRadius: BorderRadius.circular(CscRadius.control),
       ),
       child: Text(
-        'Member sign-in in this early app build opens the existing CSC Circle website. Native sign-in is being connected to the same account system.',
+        'Public founder and startup listings follow each member’s visibility and sharing choices. Private member records are not displayed in this section.',
         style: TextStyle(color: palette.goldInk, height: 1.5),
       ),
     );

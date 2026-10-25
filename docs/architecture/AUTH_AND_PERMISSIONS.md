@@ -8,7 +8,7 @@ The Supabase Auth user UUID is the account identity. It is not proof of CSC memb
 
 Use Supabase Flutter Auth with PKCE for OAuth and the platform secure-storage integration for refresh tokens. Deep-link schemes and OAuth redirects must be allowlisted by the project owner before real provider login is considered ready. Sign-out and account switching clear user-partitioned cache; revoked or expired sessions fail closed.
 
-The current Flutter bootstrap already conditionally initializes `supabase_flutter` with `AuthFlowType.pkce` and `SecureSessionStorage` backed by `flutter_secure_storage`. Configuration accepts only compile-time `CSC_SUPABASE_URL` and `CSC_SUPABASE_PUBLISHABLE_KEY`; no service-role/secret key is included. With either value absent, the app stays in its explicitly labeled public preview. Auth UI, callback/deep-link handling, and authenticated data calls are not implemented yet.
+The current Flutter bootstrap conditionally initializes `supabase_flutter` with `AuthFlowType.pkce` and `SecureSessionStorage` backed by `flutter_secure_storage`. Configuration accepts only compile-time `CSC_SUPABASE_URL` and `CSC_SUPABASE_PUBLISHABLE_KEY`; no service-role/secret key is included. With either value absent, the app stays in its explicitly labeled public preview. Native Auth UI, SDK-managed callback handling, and prepared member reads are implemented. Real sign-in, session restoration, and member reads remain gated on a project-owner-confirmed provider/redirect configuration and an approved safe test account.
 
 The web app uses `@supabase/ssr` clients bound to request cookies. Those cookies, web callback routes, and server-only admin clients are not mobile session mechanisms. The native app must obtain its own Supabase Auth session, persist it in platform secure storage, and let the SDK attach the bearer token to Data API/RPC calls. Provider enablement, callback allowlists, and a safe test account are not yet verified.
 
@@ -25,4 +25,4 @@ The 2026-10-26 read-only live policy audit is recorded in [`MOBILE_API_CONTRACTS
 
 ## Account lifecycle
 
-The website source audit did not identify a member-facing account-deletion request contract. App Store submission remains blocked until CSC provides a functioning deletion-request endpoint or an approved secure workflow and public retention explanation. Destructive deletion is always confirmed by the account owner.
+The website source audit did not identify a member-facing account-deletion request contract. See [`ACCOUNT_DELETION_DESIGN.md`](ACCOUNT_DELETION_DESIGN.md) for the proposed secure workflow and unresolved owner decisions. Do not implement destructive deletion until CSC approves its retention policy and server-side contract.

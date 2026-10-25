@@ -1,6 +1,6 @@
 # Mobile API contracts
 
-**Contract generation status:** Phase 3 implementation. Flutter initializes the existing Supabase project with PKCE and platform secure storage when URL and publishable key are injected. Public content clients and fixture-backed request tests are implemented. Member reads are prepared but not called; real Auth and live-data verification await approved configuration/test credentials.
+**Contract generation status:** Phase 3 implementation. Flutter initializes the existing Supabase project with PKCE and platform secure storage when URL and publishable key are injected. Public content clients and fixture-backed request tests are implemented. Anonymous live reads were verified for events, updates, and opportunities; `resources` is blocked by a missing `anon` table SELECT grant. Member reads are prepared but not called; real Auth and live member verification await approved configuration/test credentials.
 
 ## Rules
 
@@ -38,6 +38,10 @@ Checked the existing `csc-circle-production` project through Supabase MCP using 
 
 These checks verify current policy metadata, not successful member login or end-to-end authorization. Do not test by writing production rows. Before enabling a feature, add a local Supabase fixture/contract test and confirm behavior with an approved non-production test account.
 
+### Runtime privilege check (2026-10-26)
+
+The Data API was tested with the existing enabled publishable key, no user session, exact public query columns and publication filters. Events, community updates, and eligible opportunities returned HTTP 200 with an empty first page. Resources returned HTTP 401 with PostgreSQL `42501 permission denied for table resources`. Read-only catalog inspection found a `resources_public_read` policy for `public`, but no `anon`/`PUBLIC` table-level SELECT grant (`authenticated` has SELECT). RLS policy visibility does not grant SQL privileges; the policy cannot be evaluated until the caller has table SELECT. Do not make a production grant change until its exact statement and intended public exposure are approved by the project owner. The Resources client currently maps this denial to a safe retry state.
+
 ### Flutter implementation details
 
 - Implementation: `lib/core/backend/public_content.dart`, `lib/core/backend/member_data_repository.dart`, `lib/features/content/public_content_page.dart`.
@@ -45,7 +49,7 @@ These checks verify current policy metadata, not successful member login or end-
 - `limit` is clamped to 1–50 and the UI uses 20-row pages. Events order oldest upcoming/start date first; updates prioritize featured and recency; resources sort by recency; opportunities sort by eligible deadline and recency.
 - Member repository methods always derive the user id from the SDK session and do not accept arbitrary user ids. No member methods are referenced by the app shell yet.
 - Auth uses `SupabaseAuthRepository`, SDK-managed PKCE callback handling, and `SecureSessionStorage`. Native redirect registration exists for iOS, macOS, and Android, while signup/recovery remain disabled unless `CSC_AUTH_REDIRECT_APPROVED=true` and the URL/key are present.
-- Fixture tests are in `test/public_content_repository_test.dart` and `test/phase3_auth_widget_test.dart`; they use no live key, database, or member record.
+- Fixture tests are in `test/public_content_repository_test.dart`, `test/phase3_auth_widget_test.dart`, and `test/member_data_repository_test.dart`; they use no live member record. Device integration coverage is in `integration_test/app_smoke_test.dart` and may use the ignored local public configuration for read-only published-content requests.
 
 ## Error and retry taxonomy
 
