@@ -35,9 +35,10 @@
 - Windows CI: PASS — [run 40237973967](https://github.com/coimbatorestartupcommunity-hub/csc-circle-app/actions/runs/40237973967) for implementation commit `b5780a8`; Dart analysis, widget tests, Windows desktop build, and unsigned artifact upload all passed.
 - Latest Windows CI: PASS — [run 40241934577](https://github.com/coimbatorestartupcommunity-hub/csc-circle-app/actions/runs/40241934577) for commit `f1a5582`; analysis, all widget tests, Windows desktop build, and unsigned artifact upload passed.
 - Current Windows CI: PASS — [run 40272355891](https://github.com/coimbatorestartupcommunity-hub/csc-circle-app/actions/runs/40272355891) for source commit `d91bf7b`; Dart analysis, widget tests, Windows desktop build, and unsigned artifact upload passed.
+- Current Phase 3 implementation Windows CI: PASS — [run 40280620907](https://github.com/coimbatorestartupcommunity-hub/csc-circle-app/actions/runs/40280620907) for commit `e120995`; analysis, all widget tests, Windows desktop build, and artifact upload passed.
 - Authenticated Supabase Auth/session/callback and member-data calls: NOT RUN. No approved provider/redirect settings or isolated test identity were available. No Auth request, member query, or production write was made.
 
-- Windows CI for the current source changes: pending push/workflow. Previous CI run `40272355891` passed source commit `d91bf7b` but does not include this dashboard/secure-PKCE/view-first change set.
+- Windows CI for current source changes: PASS — run `40280620907` verifies dashboard, secure PKCE verifier storage, and view-first Resources changes in `e120995`.
 
 ## Additional live checks (2026-10-26)
 

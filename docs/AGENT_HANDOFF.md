@@ -25,7 +25,7 @@
 - macOS 27.2 configured debug build and app launch PASS; Supabase initialization completed and the app window rendered. No real sign-in was attempted.
 - Windows Actions PASS for implementation commit `b5780a8` in [run 40237973967](https://github.com/coimbatorestartupcommunity-hub/csc-circle-app/actions/runs/40237973967), and latest [run 40241934577](https://github.com/coimbatorestartupcommunity-hub/csc-circle-app/actions/runs/40241934577) for `f1a5582` passed analysis, all widget tests, Windows desktop build, and artifact upload.
 - Current Windows Actions PASS: [run 40272355891](https://github.com/coimbatorestartupcommunity-hub/csc-circle-app/actions/runs/40272355891) verified source commit `d91bf7b` through analysis, widget tests, Windows desktop build, and artifact upload.
-- Windows CI for the dashboard/PKCE/view-first source changes in this handoff: pending the current push.
+- Current Windows Actions PASS: [run 40280620907](https://github.com/coimbatorestartupcommunity-hub/csc-circle-app/actions/runs/40280620907) verified commit `e120995` through analysis, all 37 widget tests, Windows desktop build, and artifact upload.
 
 ## Phase 2 limitations
 
