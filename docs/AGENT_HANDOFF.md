@@ -23,6 +23,7 @@
 - Configured Android API 36 integration: PASS — same four public content screens, each returning HTTP 200 with zero rows. The emulator initially had broken DNS; a cold boot with snapshot loading disabled and DNS configured restored host resolution without wiping data. Debug APK built and installed.
 - macOS 27.2 configured debug build passed before the latest Resources field correction; rerun is pending. `flutter run -d macos` previously launched a CSC Circle window at the signed-out Account screen.
 - Windows Actions PASS for implementation commit `b5780a8` in [run 40237973967](https://github.com/coimbatorestartupcommunity-hub/csc-circle-app/actions/runs/40237973967), and latest [run 40241934577](https://github.com/coimbatorestartupcommunity-hub/csc-circle-app/actions/runs/40241934577) for `f1a5582` passed analysis, all widget tests, Windows desktop build, and artifact upload.
+- Current Windows Actions PASS: [run 40272355891](https://github.com/coimbatorestartupcommunity-hub/csc-circle-app/actions/runs/40272355891) verified source commit `d91bf7b` through analysis, widget tests, Windows desktop build, and artifact upload.
 
 ## Phase 2 limitations
 
