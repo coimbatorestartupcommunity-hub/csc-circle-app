@@ -3,6 +3,8 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/design/app_theme.dart';
 import '../../core/config/app_config.dart';
+import '../../core/backend/member_data_repository.dart';
+import '../member/member_dashboard_page.dart';
 import 'auth_repository.dart';
 
 enum _AuthMode { signIn, signUp, recovery, newPassword }
@@ -12,23 +14,40 @@ class AccountPage extends StatelessWidget {
     super.key,
     required this.repository,
     required this.backendConfigured,
+    this.memberDataRepository,
+    this.allowMemberReads = false,
   });
 
   final AuthRepository? repository;
   final bool backendConfigured;
+  final MemberDataRepository? memberDataRepository;
+
+  /// Explicit test/approved-environment opt-in. The production app leaves it
+  /// false until real positive and negative RLS verification is complete.
+  final bool allowMemberReads;
 
   @override
   Widget build(BuildContext context) {
     if (!backendConfigured || repository == null) {
       return const _BackendPreview();
     }
-    return _AuthFlow(repository: repository!);
+    return _AuthFlow(
+      repository: repository!,
+      memberDataRepository: memberDataRepository,
+      allowMemberReads: allowMemberReads,
+    );
   }
 }
 
 class _AuthFlow extends StatefulWidget {
-  const _AuthFlow({required this.repository});
+  const _AuthFlow({
+    required this.repository,
+    required this.memberDataRepository,
+    required this.allowMemberReads,
+  });
   final AuthRepository repository;
+  final MemberDataRepository? memberDataRepository;
+  final bool allowMemberReads;
 
   @override
   State<_AuthFlow> createState() => _AuthFlowState();
@@ -346,58 +365,14 @@ class _AuthFlowState extends State<_AuthFlow> {
     _AuthMode.newPassword => 'Update password',
   };
 
-  Widget _signedIn(BuildContext context, AuthSnapshot auth) {
-    final palette = CscPalette.of(context);
-    return Center(
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.all(CscSpacing.lg),
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 520),
-          child: Card(
-            child: Padding(
-              padding: const EdgeInsets.all(CscSpacing.xl),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Icon(
-                    Icons.verified_user_outlined,
-                    size: 44,
-                    color: palette.accent,
-                  ),
-                  const SizedBox(height: CscSpacing.md),
-                  Text(
-                    'Signed in',
-                    textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.headlineSmall
-                        ?.copyWith(fontWeight: FontWeight.w700),
-                  ),
-                  if (auth.email != null) ...[
-                    const SizedBox(height: CscSpacing.xs),
-                    Text(auth.email!, textAlign: TextAlign.center),
-                  ],
-                  const SizedBox(height: CscSpacing.md),
-                  const _InfoBanner(
-                    text: 'Member profile, membership and startup reads stay paused until an approved safe test account is available.',
-                    isError: false,
-                  ),
-                  const SizedBox(height: CscSpacing.lg),
-                  OutlinedButton.icon(
-                    onPressed: _busy ? null : _signOut,
-                    icon: const Icon(Icons.logout_rounded),
-                    label: const Text('Sign out'),
-                  ),
-                  if (_message != null) ...[
-                    const SizedBox(height: CscSpacing.md),
-                    _InfoBanner(text: _message!, isError: _messageIsError),
-                  ],
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
+  Widget _signedIn(BuildContext context, AuthSnapshot auth) =>
+      MemberDashboardPage(
+        key: ValueKey(auth.userId),
+        auth: auth,
+        repository: widget.memberDataRepository,
+        allowMemberReads: widget.allowMemberReads,
+        onSignOut: _signOut,
+      );
 }
 
 class _InfoBanner extends StatelessWidget {

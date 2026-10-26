@@ -33,3 +33,28 @@ class SecureSessionStorage extends LocalStorage {
   Future<void> removePersistedSession() =>
       _storage.delete(key: supabasePersistSessionKey);
 }
+
+/// Keeps the PKCE code verifier in the same platform secure store as sessions.
+/// Supabase Flutter defaults PKCE verifier persistence to SharedPreferences;
+/// override that default so the short-lived verifier also uses Keychain or the
+/// platform keystore-backed secure-storage implementation.
+class SecurePkceStorage extends GotrueAsyncStorage {
+  SecurePkceStorage({FlutterSecureStorage? storage})
+    : _storage = storage ?? const FlutterSecureStorage();
+
+  static const _keyPrefix = 'CSC_SUPABASE_PKCE:';
+
+  final FlutterSecureStorage _storage;
+
+  @override
+  Future<String?> getItem({required String key}) =>
+      _storage.read(key: '$_keyPrefix$key');
+
+  @override
+  Future<void> setItem({required String key, required String value}) =>
+      _storage.write(key: '$_keyPrefix$key', value: value);
+
+  @override
+  Future<void> removeItem({required String key}) =>
+      _storage.delete(key: '$_keyPrefix$key');
+}

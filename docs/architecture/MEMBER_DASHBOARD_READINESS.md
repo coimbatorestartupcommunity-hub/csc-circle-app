@@ -1,10 +1,10 @@
 # Member dashboard integration readiness
 
-**Status:** UI integration plan only. Member repositories are typed and fixture-tested, but no live member endpoint is called from the app. Live owner and denial tests require an explicitly approved isolated identity.
+**Status:** Dashboard UI implemented with repository injection and fixture-backed tests. The production opt-in stays false and no live member endpoint is called from the app. Live owner and denial tests require explicitly approved isolated identities.
 
 ## Planned signed-in Account destination
 
-Keep the existing signed-out Account and authentication navigation intact. After a valid Supabase session is established, load the following independently so one unavailable section does not hide the rest:
+The signed-in Account screen (`lib/features/member/member_dashboard_page.dart`) contains all five sections below and loads them independently when an explicitly injected repository is enabled. Widget tests inject fixture values; the normal app shell does not provide a member repository and `allowMemberReads` defaults to false.
 
 | Section | Prepared operation | UI state and privacy behavior |
 |---|---|---|
@@ -14,7 +14,7 @@ Keep the existing signed-out Account and authentication navigation intact. After
 | Notifications | `myNotificationInbox()` | Caller-addressed in-app items only; do not mark read until the owner-approved write contract is tested. |
 | Digital ID | Derived from approved member fields only | Do not render or cache an ID until its contract, fields, expiry/revocation behavior, and screenshot/privacy handling are approved. |
 
-On sign-out or account switch, clear in-memory member state and any user-scoped cache before showing the signed-out account screen. Public content may remain cached under its separate public cache policy. Session expiry must transition through the existing auth/session-expired flow and must not leave the previous member’s details visible.
+On sign-out, account switch, or session expiry, the auth flow removes the dashboard subtree; a user-ID keyed dashboard is recreated for a changed session. This clears in-memory member values before showing the signed-out form. There is no member cache yet. Public content may remain cached under its separate public cache policy.
 
 ## Enablement gate
 
@@ -26,4 +26,4 @@ Before wiring these reads into the screen:
 4. Keep write actions hidden/disabled until each corresponding server/RPC/RLS contract has a reviewed isolated write test. Notification read-state changes and event registrations are writes.
 5. Record evidence and exact account/platform/config in Phase 3 status before enabling member calls by default.
 
-Current repository behavior is fail-closed: the app shell does not invoke member repositories, the account screen does not show fabricated member records, and the client derives ownership from the authenticated SDK session.
+Current repository behavior is fail-closed: the app shell does not inject or invoke member repositories, the account screen shows paused section states rather than fabricated member records, and the client derives ownership from the authenticated SDK session. The fixture records are synthetic test-only values and are never enabled in production.

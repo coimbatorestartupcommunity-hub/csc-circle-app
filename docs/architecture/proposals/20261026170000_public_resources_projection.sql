@@ -41,16 +41,4 @@ where r.publication_status = 'published'::public.publication_status
 revoke all on public.csc_public_resources from public, anon, authenticated;
 grant select on public.csc_public_resources to anon, authenticated;
 
--- The existing website currently selects this explicit list through its anon
--- client. Before applying this revoke, migrate its public resource reads to the
--- view and move document/image path lookup to server-only admin routes.
-revoke all on public.resources from public, anon;
-revoke select (
-  id, slug, title, category, resource_type, summary, description, tags,
-  audience, cover_image_path, document_path, document_filename,
-  document_mime, external_url, source_name, source_organization, source_url,
-  author, license, attribution, seo_title, meta_description,
-  publication_status, published_at, updated_at
-) on public.resources from public, anon;
-
 commit;

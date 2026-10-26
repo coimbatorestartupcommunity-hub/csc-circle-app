@@ -1,6 +1,6 @@
 -- REVIEW PROPOSAL ONLY — pgTAP fixture test; never run against production.
 -- Run only in an explicitly approved existing non-production test branch or
--- isolated environment after applying 20261026170000_public_resources_projection.sql.
+-- isolated environment after applying view and revoke proposal migrations.
 -- Do not create a duplicate database for this test and never run it in production.
 begin;
 select plan(6);
@@ -27,6 +27,19 @@ insert into public.resources (
     'phase3_projection_test_archived', 'Archived fixture',
     'Fixture', 'article', 'Archived summary', 'Archived description', '[]'::jsonb,
     null, null, null, null, false, null, 'archived', now()
+  ),
+  (
+    'phase3_projection_test_pending', 'Pending fixture',
+    'Fixture', 'article', 'Pending summary', 'Pending description', '[]'::jsonb,
+    null, null, null, null, false, null, 'pending', null
+  ),
+  (
+    'phase3_projection_test_archived_timestamp', 'Archived timestamp fixture',
+    'Fixture', 'document', 'Published summary',
+    'Published fixture description long enough to pass validation.', '[]'::jsonb,
+    'resource-docs/00000000-0000-0000-0000-000000000002.pdf',
+    'archived.pdf', 'application/pdf', 128, true, 'CSC test fixture',
+    'published', now()
   );
 
 select ok(
@@ -65,7 +78,7 @@ select results_eq(
     order by slug
   $$,
   $$ values ('phase3_projection_test_published', true, false) $$,
-  'anon sees a published fixture and no draft or archived fixtures'
+  'anon sees only the active published fixture; draft, pending, archived and archived-at rows are hidden'
 );
 select throws_ok(
   $$ select document_path from public.resources limit 1 $$,

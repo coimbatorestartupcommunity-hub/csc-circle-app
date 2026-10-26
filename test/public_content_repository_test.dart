@@ -45,25 +45,44 @@ void main() {
         requests[0].url.queryParameters['order'],
         'featured.desc.nullslast,published_at.desc.nullslast',
       );
+      expect(requests[1].url.path, '/rest/v1/csc_public_resources');
+      expect(requests[2].url.path, '/rest/v1/resources');
       expect(
-        requests[1].url.queryParameters['select'],
+        requests[2].url.queryParameters['select'],
         isNot(contains('document_path')),
       );
       expect(
-        requests[1].url.queryParameters['select'],
+        requests[2].url.queryParameters['select'],
         isNot(contains('thumbnail_path')),
       );
       expect(
-        requests[1].url.queryParameters['select'],
+        requests[2].url.queryParameters['select'],
         'id,slug,title,category,resource_type,summary,tags,external_url,published_at',
       );
       expect(
-        requests[1].url.queryParameters['publication_status'],
+        requests[2].url.queryParameters['publication_status'],
         'eq.published',
       );
       await client.dispose();
     },
   );
+
+  test('resources prefer curated view when it is available', () async {
+    final requests = <http.Request>[];
+    final client = _fixtureClient(requests, resourceViewAvailable: true);
+    final repository = SupabasePublicContentRepository(client);
+
+    final resources = await repository.resources(offset: 0);
+
+    expect(resources.single.slug, 'founder-guide');
+    expect(requests, hasLength(1));
+    expect(requests.single.url.path, '/rest/v1/csc_public_resources');
+    expect(
+      requests.single.url.queryParameters['select'],
+      isNot(contains('document_path')),
+    );
+    await client.dispose();
+  });
 
   test(
     'opportunities use published and India-date eligibility predicates',
@@ -118,12 +137,26 @@ void main() {
   });
 }
 
-SupabaseClient _fixtureClient(List<http.Request> requests) => SupabaseClient(
+SupabaseClient _fixtureClient(
+  List<http.Request> requests, {
+  bool resourceViewAvailable = false,
+}) => SupabaseClient(
   'https://fixture.invalid',
   'sb_publishable_fixture',
   httpClient: MockClient((request) async {
     requests.add(request);
     final table = request.url.path.split('/').last;
+    if (table == 'csc_public_resources' && !resourceViewAvailable) {
+      return http.Response(
+        jsonEncode({
+          'code': 'PGRST205',
+          'message': "Could not find the table 'public.csc_public_resources' in the schema cache",
+        }),
+        404,
+        headers: const {'content-type': 'application/json'},
+        request: request,
+      );
+    }
     final fixtures = <String, List<Map<String, Object?>>>{
       'events': [
         {
@@ -148,6 +181,18 @@ SupabaseClient _fixtureClient(List<http.Request> requests) => SupabaseClient(
         },
       ],
       'resources': [
+        {
+          'id': 'resource-1',
+          'slug': 'founder-guide',
+          'title': 'Founder guide',
+          'category': 'Learning',
+          'resource_type': 'guide',
+          'summary': 'A fixture resource.',
+          'tags': ['founders', 'learning'],
+          'published_at': '2026-10-26T12:00:00Z',
+        },
+      ],
+      'csc_public_resources': [
         {
           'id': 'resource-1',
           'slug': 'founder-guide',

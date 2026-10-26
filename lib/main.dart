@@ -17,6 +17,7 @@ Future<void> main() async {
       authOptions: FlutterAuthClientOptions(
         authFlowType: AuthFlowType.pkce,
         localStorage: SecureSessionStorage(),
+        pkceAsyncStorage: SecurePkceStorage(),
       ),
     );
   }

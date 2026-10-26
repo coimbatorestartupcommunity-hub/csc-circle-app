@@ -17,7 +17,7 @@
 | Domain | Candidate operation | Access contract | Status |
 |---|---|---|---|
 | Public updates | `community_updates`: `id,slug,title,category,summary,featured,cover_image_path,cover_image_alt,published_at`; `publication_status=published`, `featured DESC, published_at DESC`, range pagination (default 20, max 50) | `anon`/authenticated RLS only; never draft | Implemented and fixture-tested |
-| Resources | `resources`: `id,slug,title,category,resource_type,summary,tags,external_url,published_at`; `publication_status=published`, `published_at DESC`, range pagination; no image/document storage paths | Existing anon column grants plus published-only RLS; no new grant | Implemented, fixture-tested, and live HTTP 200 verified (0 rows) |
+| Resources | Prefer `csc_public_resources`: `id,slug,title,category,resource_type,summary,tags,external_url,published_at`; published-only/active view, `published_at DESC`, range pagination. Fall back to the same path-free `resources` projection only when the view is missing during rollout. | Curated view after coordinated migration; existing published-only RLS/grants for compatibility before then. No storage paths. | View-first/fallback fixture-tested; current live endpoint still uses base-table fallback (HTTP 200, 0 rows) because view migration is unapplied. |
 | Opportunities | `opportunities`: `id,title,category,summary,organization,deadline,starts_on,application_url`; `publication_status=published`, unset or `deadline >= Asia/Kolkata current date`, deadline ascending then publish date descending; range pagination | Preserve IST deadline rule | Implemented and fixture-tested |
 | Events | `events`: `id,title,category,description,cover_image,starts_at,ends_at,location,venue`; `status=published`, `starts_at ASC`, range pagination | Existing public event visibility | Implemented and fixture-tested |
 | Event registration | `csc_register_event` | Authenticated active member; RPC owns capacity/duplicate/waitlist transaction | RPC source-confirmed; no production write |
@@ -44,6 +44,7 @@ The Data API was tested with the existing enabled publishable key and no user se
 
 ### Flutter implementation details
 
+- The Resources client prefers the proposed curated view and falls back to its current explicit, path-free base-table projection only on missing-view errors. It never falls back on permission, network, or other failures; this preserves compatibility while the additive view is coordinated. Do not revoke base grants until old supported native builds are retired.
 - Implementation: `lib/core/backend/public_content.dart`, `lib/core/backend/member_data_repository.dart`, `lib/features/content/public_content_page.dart`.
 - Public query failures map to offline, unauthorized, forbidden, invalid-response, or generic server categories; 15-second request timeouts are applied. Public pages display explicit loading, retry, empty, and no-config preview states.
 - `limit` is clamped to 1–50 and the UI uses 20-row pages. Events order oldest upcoming/start date first; updates prioritize featured and recency; resources sort by recency; opportunities sort by eligible deadline and recency.

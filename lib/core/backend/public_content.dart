@@ -214,6 +214,7 @@ class SupabasePublicContentRepository implements PublicContentRepository {
       'id,slug,title,category,summary,featured,cover_image_path,cover_image_alt,published_at';
   static const _resourceFields =
       'id,slug,title,category,resource_type,summary,tags,external_url,published_at';
+  static const _resourceView = 'csc_public_resources';
   static const _opportunityFields =
       'id,title,category,summary,organization,deadline,starts_on,application_url';
 
@@ -249,13 +250,30 @@ class SupabasePublicContentRepository implements PublicContentRepository {
   @override
   Future<List<CscResource>> resources({required int offset, int limit = 20}) =>
       _fetch(() async {
-        final rows = await _client
-            .from('resources')
-            .select(_resourceFields)
-            .eq('publication_status', 'published')
-            .order('published_at', ascending: false)
-            .range(offset, offset + _boundedLimit(limit) - 1)
-            .timeout(const Duration(seconds: 15));
+        final end = offset + _boundedLimit(limit) - 1;
+        List<dynamic> rows;
+        try {
+          rows = await _client
+              .from(_resourceView)
+              .select(_resourceFields)
+              .eq('publication_status', 'published')
+              .order('published_at', ascending: false)
+              .range(offset, end)
+              .timeout(const Duration(seconds: 15));
+        } on PostgrestException catch (error) {
+          // Staged rollout: the approved view is added first; this app can
+          // consume it when available and retain the current least-column
+          // base-table request until then. Never fall back on authorization,
+          // connectivity, or other query failures.
+          if (error.code != 'PGRST205' && error.code != '42P01') rethrow;
+          rows = await _client
+              .from('resources')
+              .select(_resourceFields)
+              .eq('publication_status', 'published')
+              .order('published_at', ascending: false)
+              .range(offset, end)
+              .timeout(const Duration(seconds: 15));
+        }
         return _decode(rows, CscResource.fromJson);
       });
 
