@@ -85,6 +85,46 @@ void main() {
   });
 
   test(
+    'resources do not fall back on authorization or server errors',
+    () async {
+      for (final response in [
+        (status: 403, code: '42501', kind: ContentFailureKind.forbidden),
+        (status: 500, code: 'PGRST000', kind: ContentFailureKind.server),
+      ]) {
+        final requests = <http.Request>[];
+        final client = SupabaseClient(
+          'https://fixture.invalid',
+          'sb_publishable_fixture',
+          httpClient: MockClient((request) async {
+            requests.add(request);
+            return http.Response(
+              jsonEncode({'code': response.code, 'message': 'fixture error'}),
+              response.status,
+              headers: const {'content-type': 'application/json'},
+              request: request,
+            );
+          }),
+        );
+        final repository = SupabasePublicContentRepository(client);
+
+        await expectLater(
+          repository.resources(offset: 0),
+          throwsA(
+            isA<PublicContentException>().having(
+              (error) => error.kind,
+              'kind',
+              response.kind,
+            ),
+          ),
+        );
+        expect(requests, hasLength(1));
+        expect(requests.single.url.path, '/rest/v1/csc_public_resources');
+        await client.dispose();
+      }
+    },
+  );
+
+  test(
     'opportunities use published and India-date eligibility predicates',
     () async {
       final requests = <http.Request>[];

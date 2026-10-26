@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:csc_circle_app/features/auth/account_page.dart';
 import 'package:csc_circle_app/features/auth/auth_repository.dart';
@@ -44,6 +45,50 @@ void main() {
     expect(find.text('Sign in to CSC Circle'), findsOneWidget);
   });
 
+  testWidgets('failed sign in stays signed out and shows a safe error', (
+    tester,
+  ) async {
+    final repository = _FakeAuthRepository()
+      ..signInFailure = const AuthUiException(
+        'Email or password is incorrect.',
+      );
+    await tester.pumpWidget(_authApp(repository));
+
+    await tester.enterText(
+      find.byType(TextFormField).at(0),
+      'founder@example.test',
+    );
+    await tester.enterText(
+      find.byType(TextFormField).at(1),
+      'wrong passphrase',
+    );
+    await tester.tap(find.widgetWithText(FilledButton, 'Sign in'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Email or password is incorrect.'), findsOneWidget);
+    expect(find.text('Member dashboard'), findsNothing);
+  });
+
+  testWidgets('failed logout keeps the session view and reports failure', (
+    tester,
+  ) async {
+    final auth = _FakeAuthRepository(
+      initial: const AuthSnapshot(
+        transition: AuthTransition.initial,
+        userId: 'fixture-owner-signout-failure',
+      ),
+    )..signOutFailure = const AuthUiException('Sign out could not complete.');
+    await tester.pumpWidget(_authApp(auth));
+
+    await tester.tap(find.text('Sign out'));
+    await tester.pumpAndSettle();
+
+    expect(auth.signOutCount, 1);
+    expect(find.text('Member dashboard'), findsOneWidget);
+    expect(find.text('Sign out could not complete.'), findsOneWidget);
+    expect(find.text('Sign in to CSC Circle'), findsNothing);
+  });
+
   testWidgets('fixture member repository renders all dashboard sections', (
     tester,
   ) async {
@@ -73,6 +118,15 @@ void main() {
     expect(find.text('Fixture notification'), findsOneWidget);
     expect(find.text('CSC Circle  ·  •••• 4821'), findsOneWidget);
     expect(find.text('member-number-4821'), findsNothing);
+    expect(
+      find.byWidgetPredicate(
+        (widget) =>
+            widget is Semantics &&
+            widget.properties.label ==
+                'CSC Circle member ID ending in 4821',
+      ),
+      findsOneWidget,
+    );
     expect(memberData.readCount, 4);
 
     await tester.tap(find.text('Sign out'));
@@ -80,6 +134,121 @@ void main() {
     expect(find.text('Riya Fixture'), findsNothing);
     expect(find.text('Fixture Works'), findsNothing);
     expect(find.text('Sign in to CSC Circle'), findsOneWidget);
+  });
+
+  testWidgets('dashboard shows empty member states without fabricated data', (
+    tester,
+  ) async {
+    final auth = _FakeAuthRepository(
+      initial: const AuthSnapshot(
+        transition: AuthTransition.initial,
+        userId: 'fixture-owner-empty',
+      ),
+    );
+    await tester.pumpWidget(
+      MaterialApp(
+        home: AccountPage(
+          repository: auth,
+          backendConfigured: true,
+          memberDataRepository: _EmptyFakeMemberDataRepository(),
+          allowMemberReads: true,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Your CSC profile is not available yet.'), findsOneWidget);
+    expect(
+      find.text('No membership record is available for this account.'),
+      findsOneWidget,
+    );
+    expect(
+      find.text('No startup profiles are linked to this account.'),
+      findsOneWidget,
+    );
+    expect(
+      find.text('There are no member notifications to show.'),
+      findsOneWidget,
+    );
+    expect(
+      find.text(
+        'Available when CSC confirms an eligible membership and ID record.',
+      ),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('dashboard gives an offline state and retries a failed section', (
+    tester,
+  ) async {
+    final auth = _FakeAuthRepository(
+      initial: const AuthSnapshot(
+        transition: AuthTransition.initial,
+        userId: 'fixture-owner-offline',
+      ),
+    );
+    final memberData = _FakeMemberDataRepository()..failNextStartup = true;
+    await tester.pumpWidget(
+      MaterialApp(
+        home: AccountPage(
+          repository: auth,
+          backendConfigured: true,
+          memberDataRepository: memberData,
+          allowMemberReads: true,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(
+      find.text('You appear to be offline. Check your connection and retry.'),
+      findsOneWidget,
+    );
+    expect(find.text('Fixture Works'), findsNothing);
+
+    final retry = find.widgetWithText(TextButton, 'Try again');
+    await tester.ensureVisible(retry);
+    await tester.tap(retry);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Fixture Works'), findsOneWidget);
+    expect(
+      find.text('You appear to be offline. Check your connection and retry.'),
+      findsNothing,
+    );
+  });
+
+  testWidgets('dashboard scrolls at compact width and large text size', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(320, 720);
+    tester.view.devicePixelRatio = 1;
+    tester.platformDispatcher.textScaleFactorTestValue = 2;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+
+    final auth = _FakeAuthRepository(
+      initial: const AuthSnapshot(
+        transition: AuthTransition.initial,
+        userId: 'fixture-owner-large-text',
+      ),
+    );
+    await tester.pumpWidget(
+      MaterialApp(
+        home: AccountPage(
+          repository: auth,
+          backendConfigured: true,
+          memberDataRepository: _FakeMemberDataRepository(),
+          allowMemberReads: true,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Member dashboard'), findsOneWidget);
+    expect(find.text('Digital Member ID'), findsOneWidget);
+    expect(tester.takeException(), isNull);
   });
 
   testWidgets('account switching reloads fixture data for the new session', (
@@ -296,6 +465,8 @@ class _FakeAuthRepository implements AuthRepository {
   AuthSnapshot _current;
   String? lastEmail;
   String? lastPassword;
+  AuthUiException? signInFailure;
+  AuthUiException? signOutFailure;
   SignUpOutcome signUpOutcome = SignUpOutcome.signedIn;
   int signUpCount = 0;
   int recoveryCount = 0;
@@ -317,6 +488,7 @@ class _FakeAuthRepository implements AuthRepository {
   Future<void> signIn({required String email, required String password}) async {
     lastEmail = email;
     lastPassword = password;
+    if (signInFailure case final failure?) throw failure;
     emit(
       AuthSnapshot(
         transition: AuthTransition.signedIn,
@@ -361,6 +533,7 @@ class _FakeAuthRepository implements AuthRepository {
   @override
   Future<void> signOut() async {
     signOutCount++;
+    if (signOutFailure case final failure?) throw failure;
     emit(const AuthSnapshot(transition: AuthTransition.signedOut));
   }
 }
@@ -368,6 +541,8 @@ class _FakeAuthRepository implements AuthRepository {
 class _FakeMemberDataRepository implements MemberDataRepository {
   String displayName = 'Riya Fixture';
   int readCount = 0;
+  bool failNextStartup = false;
+  bool _startupFailureUsed = false;
 
   @override
   Future<MemberProfile?> myProfile() async {
@@ -393,6 +568,10 @@ class _FakeMemberDataRepository implements MemberDataRepository {
   @override
   Future<List<MemberStartup>> myStartups() async {
     readCount++;
+    if (failNextStartup && !_startupFailureUsed) {
+      _startupFailureUsed = true;
+      throw const SocketException('fixture offline');
+    }
     return [
       MemberStartup(
         id: 'fixture-startup-id',
@@ -420,4 +599,19 @@ class _FakeMemberDataRepository implements MemberDataRepository {
       ],
     );
   }
+}
+
+class _EmptyFakeMemberDataRepository extends _FakeMemberDataRepository {
+  @override
+  Future<MemberProfile?> myProfile() async => null;
+
+  @override
+  Future<MemberMembership?> myMembership() async => null;
+
+  @override
+  Future<List<MemberStartup>> myStartups() async => [];
+
+  @override
+  Future<MemberNotificationInbox> myNotificationInbox() async =>
+      const MemberNotificationInbox(items: [], unreadCount: 0);
 }

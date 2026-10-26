@@ -27,3 +27,7 @@ Before wiring these reads into the screen:
 5. Record evidence and exact account/platform/config in Phase 3 status before enabling member calls by default.
 
 Current repository behavior is fail-closed: the app shell does not inject or invoke member repositories, the account screen shows paused section states rather than fabricated member records, and the client derives ownership from the authenticated SDK session. The fixture records are synthetic test-only values and are never enabled in production.
+
+## Fixture verification refresh (2026-10-26)
+
+The fixture-only dashboard now has explicit offline/retry behavior, safe permission/general error messages, empty states for each section, accessible live error announcements and labeled loading indicators, and compact 320 px / 2× text coverage. Tests also verify failed sign-in and failed logout, session expiry clearing, account-switch replacement, and member-ID masking. `flutter analyze` passed and all 43 tests passed. These results validate UI behavior only; `allowMemberReads` remains false in the production shell and no live member repository call was made. Do not enable reads until all live owner-positive, anonymous-negative, and cross-user-negative checks above pass with approved isolated identities.

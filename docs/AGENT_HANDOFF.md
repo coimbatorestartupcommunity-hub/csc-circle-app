@@ -49,3 +49,15 @@
 
 - Dashboard integration is prepared in [`MEMBER_DASHBOARD_READINESS.md`](architecture/MEMBER_DASHBOARD_READINESS.md). Do not invoke member repositories until an approved isolated account passes live owner-read and anonymous/cross-user denial checks.
 - Account deletion remains design-only. CSC owner decisions and security gates are enumerated in [`ACCOUNT_DELETION_DESIGN.md`](architecture/ACCOUNT_DELETION_DESIGN.md); no endpoint, Auth Admin operation, or production write exists.
+
+## Verification refresh (2026-10-26)
+
+- Latest local checks: `flutter analyze` PASS; `flutter test --reporter expanded` PASS (43 tests).
+- iPhone 17 / iOS 26.4 `integration_test/app_smoke_test.dart`: PASS (build, install, launch and navigation/content smoke test).
+- Android 16 / API 36 `integration_test/app_smoke_test.dart`: PASS (debug build, install, launch and navigation/content smoke test).
+- macOS 27.2 `flutter run -d macos --debug --dart-define-from-file=dart_defines.json`: PASS (build/launch; Supabase initialized).
+- No authentication request, callback exchange, real identity, or member repository call was made. Supabase provider and callback allowlist settings remain unavailable in the authorized project metadata; dashboard access requires the owner/operator to authenticate. Signup/recovery and member reads remain gated.
+- Fixture additions cover offline retry, empty states, permission/error messaging, large text on compact width, sign-in/logout failures, session expiry, account-switch clearing, and Resources view errors that must not trigger fallback. The Resources view and grant/revoke plan remains coordinated across both repos and unapplied.
+- No Windows workflow has yet run for this uncommitted refresh. Previous passing run `40280620907` is evidence for `e120995`, not for these changes; push the reviewed changes and confirm the new CI result.
+- `NATIVE_AUTH_VERIFICATION.md` records current iOS/macOS bundle IDs and Android application ID without changing them, plus the unassigned Windows identity/protocol. `RELEASE_READINESS_CHECKLIST.md` tracks signing, deletion, privacy, supported versions, and security testing.
+- Preserve untracked local `devtools_options.yaml` and ignored `dart_defines.json`; do not stage them.

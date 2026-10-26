@@ -369,6 +369,8 @@ class _AuthFlowState extends State<_AuthFlow> {
       MemberDashboardPage(
         key: ValueKey(auth.userId),
         auth: auth,
+        actionMessage: _message,
+        actionMessageIsError: _messageIsError,
         repository: widget.memberDataRepository,
         allowMemberReads: widget.allowMemberReads,
         onSignOut: _signOut,

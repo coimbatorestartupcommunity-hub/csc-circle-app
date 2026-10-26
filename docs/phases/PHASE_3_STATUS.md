@@ -1,5 +1,7 @@
 # Phase 3 — Authentication and member-data integration
 
+> **Verification refresh (2026-10-26):** Local fixture-only dashboard improvements and current simulator checks are recorded below. This does not change the Phase 3 completion gate: real authorized PKCE callback exchange, session persistence, and owner/negative RLS checks remain unverified.
+
 **Status:** IN PROGRESS — native PKCE auth UI, guarded app-link callbacks, public content clients, and member-repository fixture tests are implemented. All four public endpoints now accept the native field projections under existing anon column grants and published-only RLS; no production permission change was required. Authenticated member repositories remain prepared but are not called.
 
 ## Read-only audit completed (2026-10-26)
@@ -94,3 +96,17 @@ The signed-in Account destination is implemented with fixture-driven sections an
 The account-deletion owner decision checklist is in [`ACCOUNT_DELETION_DESIGN.md`](../architecture/ACCOUNT_DELETION_DESIGN.md): approve a record-by-record retention disposition, timing and cancellation rules, identity re-authentication, holds/support handling, user-facing privacy copy, and the exact server contract and authorization/recovery tests.
 
 See [`CSC_WEB_AUDIT.md`](../architecture/CSC_WEB_AUDIT.md), [`MOBILE_API_CONTRACTS.md`](../architecture/MOBILE_API_CONTRACTS.md), and [`AUTH_AND_PERMISSIONS.md`](../architecture/AUTH_AND_PERMISSIONS.md).
+
+## Verification refresh (2026-10-26)
+
+- Added fixture coverage for failed sign-in and failed logout, dashboard empty states, offline startup failure and retry, account switching, and 320 px wide layout at 2× text scaling. Dashboard errors now expose a live accessibility region, section titles are announced as headers, progress states are labeled, and retry controls work without returning a Future from `setState`.
+- Added a Resources repository regression test: view absence (`PGRST205`/`42P01`) may use the compatibility query, while permission-denied (`403`/`42501`) and server errors do not fall back.
+- `flutter analyze`: PASS — no issues found.
+- `flutter test --reporter expanded`: PASS — 43 tests.
+- iPhone 17 / iOS 26.4: PASS — `integration_test/app_smoke_test.dart` built, installed and launched on `43708308-5A8E-47D4-9313-698791EF168A`; first screen/navigation/public content smoke test passed.
+- Android 16 / API 36: PASS — `integration_test/app_smoke_test.dart` built, installed and launched on `emulator-5554`; first screen/navigation/public content smoke test passed.
+- macOS 27.2: PASS — `flutter run -d macos --debug --dart-define-from-file=dart_defines.json` built and launched the app; Supabase client initialization completed. No authentication operation was attempted.
+- Windows CI: latest available passing run remains [40280620907](https://github.com/coimbatorestartupcommunity-hub/csc-circle-app/actions/runs/40280620907) for `e120995`. A new workflow run is required for this refresh’s source changes.
+- Provider toggles and redirect allowlist remain unverified. Available Supabase project metadata did not include Authentication provider/URL configuration, and the dashboard requires an authorized interactive login. No callback exchange, Auth request, identity creation, live member read, migration, or production write was made.
+- Current app IDs were inspected and documented in [`NATIVE_AUTH_VERIFICATION.md`](../architecture/NATIVE_AUTH_VERIFICATION.md). No identifier was changed. The Windows runner has no package identity/AUMID or registered callback protocol. Release/signing/privacy/account-deletion decisions are listed in [`RELEASE_READINESS_CHECKLIST.md`](../architecture/RELEASE_READINESS_CHECKLIST.md).
+- The current Resources base-table compatibility route remains available. The proposed curated view, website server-route change, grants/revocation, and rollback remain coordinated review artifacts only; no SQL was applied. The native client falls back only when the view is genuinely absent, not on authorization or server errors.

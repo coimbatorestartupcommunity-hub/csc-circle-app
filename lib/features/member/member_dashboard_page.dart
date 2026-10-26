@@ -1,4 +1,8 @@
+import 'dart:async';
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../core/backend/member_data_repository.dart';
 import '../../core/design/app_theme.dart';
@@ -14,12 +18,16 @@ class MemberDashboardPage extends StatefulWidget {
     super.key,
     required this.auth,
     required this.onSignOut,
+    this.actionMessage,
+    this.actionMessageIsError = false,
     this.repository,
     this.allowMemberReads = false,
   });
 
   final AuthSnapshot auth;
   final Future<void> Function() onSignOut;
+  final String? actionMessage;
+  final bool actionMessageIsError;
   final MemberDataRepository? repository;
   final bool allowMemberReads;
 
@@ -129,6 +137,21 @@ class _MemberDashboardPageState extends State<MemberDashboardPage> {
                         icon: const Icon(Icons.logout_rounded),
                         label: Text(_signingOut ? 'Signing out…' : 'Sign out'),
                       ),
+                      if (widget.actionMessage case final message?) ...[
+                        const SizedBox(height: CscSpacing.sm),
+                        Semantics(
+                          liveRegion: true,
+                          child: Text(
+                            message,
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              color: widget.actionMessageIsError
+                                  ? palette.ink
+                                  : palette.goldInk,
+                            ),
+                          ),
+                        ),
+                      ],
                     ],
                   ),
                 ),
@@ -155,7 +178,11 @@ class _MemberDashboardPageState extends State<MemberDashboardPage> {
     title: 'Profile',
     icon: Icons.account_circle_outlined,
     future: _profile,
-    retry: () => setState(() => _profile = widget.repository!.myProfile()),
+    retry: () {
+      setState(() {
+        _profile = widget.repository!.myProfile();
+      });
+    },
     content: (profile) => profile == null
         ? const Text('Your CSC profile is not available yet.')
         : Column(
@@ -173,8 +200,11 @@ class _MemberDashboardPageState extends State<MemberDashboardPage> {
     title: 'Membership',
     icon: Icons.badge_outlined,
     future: _membership,
-    retry: () =>
-        setState(() => _membership = widget.repository!.myMembership()),
+    retry: () {
+      setState(() {
+        _membership = widget.repository!.myMembership();
+      });
+    },
     content: (membership) => membership == null
         ? const Text('No membership record is available for this account.')
         : Text('Status: ${membership.status}'),
@@ -185,7 +215,11 @@ class _MemberDashboardPageState extends State<MemberDashboardPage> {
     title: 'Startups',
     icon: Icons.rocket_launch_outlined,
     future: _startups,
-    retry: () => setState(() => _startups = widget.repository!.myStartups()),
+    retry: () {
+      setState(() {
+        _startups = widget.repository!.myStartups();
+      });
+    },
     content: (startups) => startups.isEmpty
         ? const Text('No startup profiles are linked to this account.')
         : Column(
@@ -206,9 +240,11 @@ class _MemberDashboardPageState extends State<MemberDashboardPage> {
     title: 'Notifications',
     icon: Icons.notifications_none_rounded,
     future: _notifications,
-    retry: () => setState(
-      () => _notifications = widget.repository!.myNotificationInbox(),
-    ),
+    retry: () {
+      setState(() {
+        _notifications = widget.repository!.myNotificationInbox();
+      });
+    },
     content: (inbox) => inbox.items.isEmpty
         ? const Text('There are no member notifications to show.')
         : Column(
@@ -230,8 +266,11 @@ class _MemberDashboardPageState extends State<MemberDashboardPage> {
     title: 'Digital Member ID',
     icon: Icons.credit_card_outlined,
     future: _membership,
-    retry: () =>
-        setState(() => _membership = widget.repository!.myMembership()),
+    retry: () {
+      setState(() {
+        _membership = widget.repository!.myMembership();
+      });
+    },
     content: (membership) {
       final number = membership?.memberNumber;
       final expiresAt = membership?.expiresAt;
@@ -270,14 +309,18 @@ class _MemberDashboardPageState extends State<MemberDashboardPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
+            Wrap(
+              spacing: CscSpacing.sm,
+              crossAxisAlignment: WrapCrossAlignment.center,
               children: [
                 Icon(icon, color: palette.accent),
-                const SizedBox(width: CscSpacing.sm),
-                Text(
-                  title,
-                  style: Theme.of(context).textTheme.titleMedium
-                      ?.copyWith(fontWeight: FontWeight.w700),
+                Semantics(
+                  header: true,
+                  child: Text(
+                    title,
+                    style: Theme.of(context).textTheme.titleMedium
+                        ?.copyWith(fontWeight: FontWeight.w700),
+                  ),
                 ),
               ],
             ),
@@ -298,7 +341,10 @@ class _MemberDashboardPageState extends State<MemberDashboardPage> {
                     return Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text('This section could not be loaded.'),
+                        Semantics(
+                          liveRegion: true,
+                          child: Text(_failureMessage(snapshot.error)),
+                        ),
                         TextButton(
                           onPressed: retry,
                           child: const Text('Try again'),
@@ -307,7 +353,11 @@ class _MemberDashboardPageState extends State<MemberDashboardPage> {
                     );
                   }
                   if (snapshot.connectionState != ConnectionState.done) {
-                    return const LinearProgressIndicator();
+                    return Semantics(
+                      label: 'Loading $title',
+                      liveRegion: true,
+                      child: const LinearProgressIndicator(),
+                    );
                   }
                   return content(snapshot.data as T);
                 },
@@ -317,4 +367,17 @@ class _MemberDashboardPageState extends State<MemberDashboardPage> {
       ),
     );
   }
+}
+
+String _failureMessage(Object? error) {
+  if (error is SocketException ||
+      error is TimeoutException ||
+      error is AuthRetryableFetchException) {
+    return 'You appear to be offline. Check your connection and retry.';
+  }
+  if (error is PostgrestException &&
+      (error.code == '401' || error.code == '403' || error.code == '42501')) {
+    return 'This member information is not available for this account.';
+  }
+  return 'This section could not be loaded. Try again.';
 }
