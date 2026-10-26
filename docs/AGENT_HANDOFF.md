@@ -17,10 +17,11 @@
 
 - `flutter analyze`: PASS — no issues.
 - `flutter test --reporter expanded`: PASS — 32 tests including Auth/content/member fixture coverage.
-- Anonymous live Data API checks with the publishable key: Events, Updates and Opportunities return HTTP 200 with zero rows in their first published page. Resources returns HTTP 401 / `42501 permission denied`; catalog metadata shows a public read policy but no `anon` SELECT grant (only `authenticated`). No permission change was made.
-- Configured iPhone 17 / iOS 26.4 integration: PASS — onboarding/navigation plus all four public content screens; Resources displays the expected safe forbidden state.
-- Configured Android API 36 integration: PASS — same four public content screens and safe Resources forbidden state. Debug APK built and installed.
-- macOS 27.2 configured debug build passed; `flutter run -d macos` launched a CSC Circle window at the signed-out Account screen.
+- Anonymous live Data API checks with the publishable key: Events, Updates, Opportunities, the website's explicit Resources projection, and the corrected native Resources projection return HTTP 200 with zero rows. The original Flutter request failed because it selected unused `thumbnail_path`; the client no longer requests it. No permission change was made. Table-wide `select=*` remains denied.
+- Catalog inspection confirms `anon` has existing column grants for the website projection, including private document path/metadata fields, while lacking table-level SELECT. The public RLS policy filters to `publication_status='published'`; `archived` status is excluded. A coordinated public-view migration and pgTAP proposal is documented under `architecture/proposals/` and has not been run.
+- Configured iPhone 17 / iOS 26.4 integration: PASS — onboarding/navigation plus all four public content screens; each live query returned HTTP 200 with zero rows and displayed the empty state.
+- Configured Android API 36 integration: PASS — same four public content screens, each returning HTTP 200 with zero rows. The emulator initially had broken DNS; a cold boot with snapshot loading disabled and DNS configured restored host resolution without wiping data. Debug APK built and installed.
+- macOS 27.2 configured debug build passed before the latest Resources field correction; rerun is pending. `flutter run -d macos` previously launched a CSC Circle window at the signed-out Account screen.
 - Windows Actions PASS for implementation commit `b5780a8` in [run 40237973967](https://github.com/coimbatorestartupcommunity-hub/csc-circle-app/actions/runs/40237973967), and latest [run 40241934577](https://github.com/coimbatorestartupcommunity-hub/csc-circle-app/actions/runs/40241934577) for `f1a5582` passed analysis, all widget tests, Windows desktop build, and artifact upload.
 
 ## Phase 2 limitations
@@ -34,7 +35,12 @@
 
 ## Current next actions
 
-1. Obtain owner approval for the exact read-only production fix `GRANT SELECT ON TABLE public.resources TO anon;` if public anonymous resources are intended. Do not apply without approval; re-run the filtered Data API request afterward.
+1. Review the least-privilege view proposal and required website server-route changes in [`RESOURCES_PUBLIC_PROJECTION.md`](architecture/proposals/RESOURCES_PUBLIC_PROJECTION.md). The app currently works against existing column grants without any permission change; the website's anonymous projection already includes document path fields.
 2. Obtain authorized provider/app-ID/redirect confirmation plus approval for a safe test identity, then test sign-in/callback/session/logout and positive/negative member RLS on iOS, Android, and macOS. Keep signup/recovery gated.
 3. Get approval for the account-deletion policy and server contract in [`ACCOUNT_DELETION_DESIGN.md`](architecture/ACCOUNT_DELETION_DESIGN.md). No production writes or permission changes have been made.
 4. Preserve Phase 2 performance and platform limitations in `docs/phases/PHASE_2_COMPLETE.md`; avoid claiming native Liquid Glass or unverified iOS VoiceOver behavior.
+
+## Member dashboard and account deletion
+
+- Dashboard integration is prepared in [`MEMBER_DASHBOARD_READINESS.md`](architecture/MEMBER_DASHBOARD_READINESS.md). Do not invoke member repositories until an approved isolated account passes live owner-read and anonymous/cross-user denial checks.
+- Account deletion remains design-only. CSC owner decisions and security gates are enumerated in [`ACCOUNT_DELETION_DESIGN.md`](architecture/ACCOUNT_DELETION_DESIGN.md); no endpoint, Auth Admin operation, or production write exists.

@@ -24,3 +24,14 @@
 ## Owner decisions and implementation gate
 
 CSC must approve the retention/deletion matrix, processing and cancellation policy, user-facing copy, identity re-authentication method, support/escalation path, and the exact server endpoint/RPC plus its authorization tests. Review the relevant privacy policy and store account-deletion requirements before shipping. Then test the complete workflow against an isolated test identity and disposable fixture data, including authorization failure, retries, session revocation, and partial-failure recovery. No production deletion test is allowed without explicit authorization.
+
+### Exact owner decisions still required
+
+- **Data disposition:** for profiles/contact details, memberships and claims, startups, notification content/read state, event registrations, uploaded files, audit/security records, and backups, decide delete, retain, or anonymize; identify legal/operational basis and retention duration for every retained category.
+- **Timing:** choose request processing SLA, any grace period, whether and until when a request can be cancelled, and how partial failure is surfaced and resumed.
+- **Identity assurance:** specify recent-auth age, accepted re-authentication providers, verified channel for confirmation, and support-assisted recovery for inaccessible accounts.
+- **Holds and shared records:** define who may place/release a hold, how holds are disclosed, and what happens to registrations, safety reports, and other shared records that cannot be removed without affecting others.
+- **Server contract:** approve the endpoint/RPC owner, request/status schema, idempotency behavior, rate limits, audit events, session revocation order, retry/resume semantics, and authorization/negative tests. The client must never submit a target user ID or receive elevated credentials.
+- **User disclosures:** approve in-app, privacy-policy, and store-facing copy, including retained data, processing delay, cancellation, support contact, and completion notification.
+
+No choice above is assumed by this design. Until CSC records these decisions and approves the endpoint contract, account deletion remains unavailable in the app.

@@ -102,7 +102,6 @@ final class CscResource extends PublicContentItem {
     required this.category,
     required this.resourceType,
     required this.tags,
-    this.thumbnailPath,
     this.externalUrl,
     this.publishedAt,
   });
@@ -114,7 +113,6 @@ final class CscResource extends PublicContentItem {
   final String category;
   final String resourceType;
   final List<String> tags;
-  final String? thumbnailPath;
   final String? externalUrl;
   final DateTime? publishedAt;
   @override
@@ -130,7 +128,6 @@ final class CscResource extends PublicContentItem {
     tags: (json['tags'] as List<dynamic>? ?? const [])
         .whereType<String>()
         .toList(growable: false),
-    thumbnailPath: _optionalText(json, 'thumbnail_path'),
     externalUrl: _optionalText(json, 'external_url'),
     publishedAt: _optionalDate(json, 'published_at'),
   );
@@ -216,7 +213,7 @@ class SupabasePublicContentRepository implements PublicContentRepository {
   static const _updateFields =
       'id,slug,title,category,summary,featured,cover_image_path,cover_image_alt,published_at';
   static const _resourceFields =
-      'id,slug,title,category,resource_type,summary,tags,thumbnail_path,external_url,published_at';
+      'id,slug,title,category,resource_type,summary,tags,external_url,published_at';
   static const _opportunityFields =
       'id,title,category,summary,organization,deadline,starts_on,application_url';
 

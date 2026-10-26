@@ -1,6 +1,6 @@
 # Mobile API contracts
 
-**Contract generation status:** Phase 3 implementation. Flutter initializes the existing Supabase project with PKCE and platform secure storage when URL and publishable key are injected. Public content clients and fixture-backed request tests are implemented. Anonymous live reads were verified for events, updates, and opportunities; `resources` is blocked by a missing `anon` table SELECT grant. Member reads are prepared but not called; real Auth and live member verification await approved configuration/test credentials.
+**Contract generation status:** Phase 3 implementation. Flutter initializes the existing Supabase project with PKCE and platform secure storage when URL and publishable key are injected. All four public content clients have passed anonymous Data API checks with existing published-only RLS and column grants. Member reads are prepared but not called; real Auth and live member verification await approved configuration/test credentials.
 
 ## Rules
 
@@ -17,7 +17,7 @@
 | Domain | Candidate operation | Access contract | Status |
 |---|---|---|---|
 | Public updates | `community_updates`: `id,slug,title,category,summary,featured,cover_image_path,cover_image_alt,published_at`; `publication_status=published`, `featured DESC, published_at DESC`, range pagination (default 20, max 50) | `anon`/authenticated RLS only; never draft | Implemented and fixture-tested |
-| Resources | `resources`: `id,slug,title,category,resource_type,summary,tags,thumbnail_path,external_url,published_at`; `publication_status=published`, `published_at DESC`, range pagination; no private document fields | Publication RLS and server-side document check | Implemented and fixture-tested; details/download routes not wired |
+| Resources | `resources`: `id,slug,title,category,resource_type,summary,tags,external_url,published_at`; `publication_status=published`, `published_at DESC`, range pagination; no image/document storage paths | Existing anon column grants plus published-only RLS; no new grant | Implemented, fixture-tested, and live HTTP 200 verified (0 rows) |
 | Opportunities | `opportunities`: `id,title,category,summary,organization,deadline,starts_on,application_url`; `publication_status=published`, unset or `deadline >= Asia/Kolkata current date`, deadline ascending then publish date descending; range pagination | Preserve IST deadline rule | Implemented and fixture-tested |
 | Events | `events`: `id,title,category,description,cover_image,starts_at,ends_at,location,venue`; `status=published`, `starts_at ASC`, range pagination | Existing public event visibility | Implemented and fixture-tested |
 | Event registration | `csc_register_event` | Authenticated active member; RPC owns capacity/duplicate/waitlist transaction | RPC source-confirmed; no production write |
@@ -40,7 +40,7 @@ These checks verify current policy metadata, not successful member login or end-
 
 ### Runtime privilege check (2026-10-26)
 
-The Data API was tested with the existing enabled publishable key, no user session, exact public query columns and publication filters. Events, community updates, and eligible opportunities returned HTTP 200 with an empty first page. Resources returned HTTP 401 with PostgreSQL `42501 permission denied for table resources`. Read-only catalog inspection found a `resources_public_read` policy for `public`, but no `anon`/`PUBLIC` table-level SELECT grant (`authenticated` has SELECT). RLS policy visibility does not grant SQL privileges; the policy cannot be evaluated until the caller has table SELECT. Do not make a production grant change until its exact statement and intended public exposure are approved by the project owner. The Resources client currently maps this denial to a safe retry state.
+The Data API was tested with the existing enabled publishable key and no user session. Events, community updates, opportunities, the exact website `RESOURCE_PUBLIC_FIELDS` projection, and the corrected native Resources projection returned HTTP 200 with empty first pages. The original native request returned HTTP 401 / `42501` because it selected `thumbnail_path`, a column not granted to `anon`; the app did not use that field, so it was removed. `anon` has column-level SELECT on the website projection, including `document_path`, `document_filename`, and `document_mime`, but no table-level SELECT. A document-path-only request also returned HTTP 200 (with zero rows), confirming that the path column is currently queryable by anonymous clients for rows allowed by RLS; no path values were retrieved. `select=*` remains denied. The current RLS policy filters `publication_status='published'`. A narrower public-view hardening proposal is documented at [`proposals/RESOURCES_PUBLIC_PROJECTION.md`](proposals/RESOURCES_PUBLIC_PROJECTION.md) and has not been applied. The view migration must be coordinated with website changes because the current web projection uses those path columns.
 
 ### Flutter implementation details
 

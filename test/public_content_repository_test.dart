@@ -50,6 +50,14 @@ void main() {
         isNot(contains('document_path')),
       );
       expect(
+        requests[1].url.queryParameters['select'],
+        isNot(contains('thumbnail_path')),
+      );
+      expect(
+        requests[1].url.queryParameters['select'],
+        'id,slug,title,category,resource_type,summary,tags,external_url,published_at',
+      );
+      expect(
         requests[1].url.queryParameters['publication_status'],
         'eq.published',
       );

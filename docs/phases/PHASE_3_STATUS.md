@@ -1,6 +1,6 @@
 # Phase 3 — Authentication and member-data integration
 
-**Status:** IN PROGRESS — native PKCE auth UI, guarded app-link callbacks, public content clients, and member-repository fixture tests are implemented. Three public endpoints are live-readable; the Resources table is currently denied to the `anon` role by missing table-level SELECT privilege. Authenticated member repositories remain prepared but are not called.
+**Status:** IN PROGRESS — native PKCE auth UI, guarded app-link callbacks, public content clients, and member-repository fixture tests are implemented. All four public endpoints now accept the native field projections under existing anon column grants and published-only RLS; no production permission change was required. Authenticated member repositories remain prepared but are not called.
 
 ## Read-only audit completed (2026-10-26)
 
@@ -40,15 +40,16 @@
 
 - Supabase project metadata confirmed the existing `csc-circle-production` project is active/healthy. Its API URL and an enabled publishable key match the ignored local `dart_defines.json`; the file is Git-ignored and neither value was printed or committed.
 - Supabase Auth dashboard settings could not be inspected: the authorized browser profile redirected to Supabase sign-in. Provider enablement, application identifiers, and the exact `cscircle://auth-callback` allowlist state therefore remain unverified. The local compile-time approval flag remains `false`; signup/recovery are not enabled.
-- Anonymous Data API GETs using the publishable key and the repository's explicit field sets/visibility/date filters returned: `events` HTTP 200 (0 rows in first page), `community_updates` HTTP 200 (0), `opportunities` HTTP 200 (0), and `resources` HTTP 401 / PostgreSQL `42501` (permission denied). A read-only catalog query found the `resources_public_read` policy for `public`, but the table grants `SELECT` to `authenticated` only; there is no `anon`/`PUBLIC` SELECT grant. The page correctly shows a safe retry/error state. No grant or policy was changed.
-- iOS 26.4 simulator integration with the local config passed all four public content checks: Events, Updates, and Opportunities reach their empty states; Resources shows the mapped forbidden/retry state. The same integration passed on Android 16 / API 36.
+- Live Resources authorization review found RLS enabled and `resources_public_read` scoped to `publication_status='published'`. `anon` has no table-level SELECT but already has column-level SELECT for the website’s explicit public projection. The original Flutter query failed because it also requested unused `thumbnail_path`, which is not granted. Removing that field makes the native projection return HTTP 200 under the existing policy. The website’s explicit projection also returns HTTP 200; `select=*` is denied. No grant or policy was changed.
+- The current anonymous column grants include `document_path`, `document_filename`, and `document_mime`, which the server-only website helper selects to determine download availability. No path values were returned in these checks, but the columns are directly queryable by anonymous clients for published rows. A coordinated public-view and server-route hardening proposal is recorded under `docs/architecture/proposals/`; it is not applied.
+- iOS 26.4 simulator integration with the local config passed all four public content checks: Events, Updates, Resources, and Opportunities returned HTTP 200 with empty published pages. The same integration passed on Android 16 / API 36 after repairing emulator DNS with a cold boot (no snapshot load) and a configured DNS server; no emulator data wipe was performed.
 - `flutter analyze`: PASS after adding member fixture tests and live-content integration coverage. `flutter test --reporter expanded`: PASS — 32 tests.
-- Configured iOS 26.4 and Android 16 device integration: PASS — both ran first-launch onboarding/navigation and exercised all four live content clients. Events, Updates, and Opportunities returned empty published pages; Resources displayed its expected safe forbidden/retry state.
-- Configured builds: iOS Simulator app build PASS; Android debug APK build/install PASS; macOS debug build and launch PASS.
+- Configured iOS 26.4 and Android 16 device integration: PASS — both ran first-launch onboarding/navigation and exercised all four live content clients. Each endpoint returned HTTP 200 with zero published rows; this verifies connectivity and the empty state, not populated content rendering.
+- Configured builds: iOS Simulator app build PASS; Android debug APK build/install PASS; macOS debug build PASS after the current Resources projection change. macOS launch was previously observed on the signed-out Account screen; this turn reran the build, not the UI launch.
 
 ## Remaining safe implementation order
 
-1. Have the project owner review and approve the exact read-only production grant needed for the existing `resources_public_read` policy to be reachable by anonymous clients (`GRANT SELECT ON TABLE public.resources TO anon;`). Do not apply it until approval; re-run the filtered Data API request afterward.
+1. Review the prepared public projection plus coordinated website updates to move `document_path`/image path resolution into server-only routes. Current app access needs no permission change. The website's existing explicit public projection is already permitted and includes storage-path columns; no change may be applied until CSC approves the contract and coordinates the web release.
 2. Obtain authorized dashboard access or owner confirmation for enabled providers, registered app identifiers, and exact `cscircle://auth-callback` allowlisting. Keep the compile-time signup/recovery gate false until the callback has been tested.
 3. Approve an isolated test identity and scope. Prefer a dedicated test environment if already available; otherwise explicitly approve a clearly labeled test Auth identity in the existing project and confirm any Auth trigger side effects before creating it.
 4. With that identity/config, test sign-in, callback code exchange, session restoration, logout/revocation, provider errors, and expired-session behavior on iOS, Android, and macOS. Then run positive owner-data and negative cross-user/anonymous checks under real RLS before wiring member UI.
@@ -58,8 +59,14 @@
 ## Current blockers and limits
 
 - The Auth dashboard required sign-in, so enabled providers, app IDs, and redirect allowlisting remain unknown. No real Auth request or test identity creation was attempted.
-- The Resources production table lacks an `anon` SELECT grant despite the public-read policy; an owner-approved grant is needed for the existing anonymous public endpoint to work.
+- The Resources client is fixed without a database change: it no longer selects the unused, ungranted `thumbnail_path`. Live native and website projections returned HTTP 200 with zero rows; `select=*` remains denied. Anonymous column privileges currently include `document_path` and related metadata for published rows. The proposal in `../architecture/proposals/RESOURCES_PUBLIC_PROJECTION.md` is a review artifact only; its migration and pgTAP fixture were not run.
 - No live member data or production writes were used. Fixture tests and RLS metadata do not replace authenticated positive/negative integration tests.
 - Account deletion has no verified member-facing/server contract; store readiness remains blocked until the owner approves the workflow and retention text.
+
+## Member dashboard readiness
+
+The signed-in Account destination should be integrated through the existing typed repositories only after an approved isolated identity passes live RLS checks. The planned sections and data sources are documented in [`MEMBER_DASHBOARD_READINESS.md`](../architecture/MEMBER_DASHBOARD_READINESS.md). Until that gate passes, the shell does not call profile, membership, startup, notification, or membership-status endpoints and displays no fabricated member data.
+
+The account-deletion owner decision checklist is in [`ACCOUNT_DELETION_DESIGN.md`](../architecture/ACCOUNT_DELETION_DESIGN.md): approve a record-by-record retention disposition, timing and cancellation rules, identity re-authentication, holds/support handling, user-facing privacy copy, and the exact server contract and authorization/recovery tests.
 
 See [`CSC_WEB_AUDIT.md`](../architecture/CSC_WEB_AUDIT.md), [`MOBILE_API_CONTRACTS.md`](../architecture/MOBILE_API_CONTRACTS.md), and [`AUTH_AND_PERMISSIONS.md`](../architecture/AUTH_AND_PERMISSIONS.md).

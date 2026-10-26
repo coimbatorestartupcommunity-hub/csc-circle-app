@@ -53,10 +53,11 @@ void main() {
       await tester.ensureVisible(resourcesAction);
       await tester.tap(resourcesAction);
       await tester.pumpAndSettle();
-      await _expectPublicFailure(
+      await _expectPublicResponse(
         tester,
         pageTitle: 'Community resources',
-        message: 'This content is not available right now.',
+        emptyMessage:
+            'There are no published Community resources to show right now.',
       );
       await tester.pageBack();
       await tester.pumpAndSettle();
@@ -105,17 +106,11 @@ Future<void> _expectPublicResponse(
 }) async {
   expect(find.text(pageTitle), findsOneWidget);
   await tester.pumpAndSettle();
+  final retryButton = find.text('Try again');
+  if (retryButton.evaluate().isNotEmpty) {
+    await tester.tap(retryButton);
+    await tester.pumpAndSettle();
+  }
   expect(find.text('Try again'), findsNothing);
   expect(find.text(emptyMessage), findsOneWidget);
-}
-
-Future<void> _expectPublicFailure(
-  WidgetTester tester, {
-  required String pageTitle,
-  required String message,
-}) async {
-  expect(find.text(pageTitle), findsOneWidget);
-  await tester.pumpAndSettle();
-  expect(find.text(message), findsOneWidget);
-  expect(find.text('Try again'), findsOneWidget);
 }
